@@ -1,0 +1,93 @@
+<html>
+
+<body>
+    <img id="image" src="{{url}}" alt="Image" width="640" height="480" hidden>
+    <canvas id="canvas" width="640" height="480"></canvas>
+</body>
+
+<script>
+
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const image = document.getElementById("image");
+
+    let box = []
+    // image.addEventListener("load", (e) => {
+    //     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    // });
+
+    const url = image.src;
+    async function update_image() {
+        // const response = await fetch(`${url}image`);
+        // const base64Image = await response.text();
+        // image.src = `data:image/jpeg;base64,${base64Image}`;
+        let image = new Image()
+        image.src = `${url}image?v=${new Date().getTime()}`;
+        console.log(image.src)
+        image.addEventListener("load", (e) => {
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < box.length; ++i) {
+                const scaledX1 = box[i].x1 * (canvas.width / image.width);
+                const scaledY1 = box[i].y1 * (canvas.height / image.height);
+                const scaledWidth = (box[i].x2 - box[i].x1) * (canvas.width / image.width);
+                const scaledHeight = (box[i].y2 - box[i].y1) * (canvas.height / image.height);
+
+                class_type = box[i].class_type;
+                box_color = getBoxColor(class_type);
+                ctx.beginPath();
+                ctx.strokeStyle = box_color;
+                ctx.lineWidth = 2;
+                ctx.font = "lighter 12px Arial";
+                ctx.fillStyle = "red";
+                ctx.fillText(getClass(class_type), scaledX1, scaledY1 - 5);
+                ctx.rect(scaledX1, scaledY1, scaledWidth, scaledHeight);
+                ctx.stroke();
+            }
+            setTimeout(update_image, 50)
+        });
+        //console.log("update_image()")
+    }
+    update_image()
+    async function get_boxes() {
+        const response = await fetch(`${url}box`);
+        box = await response.json();
+    }
+    setInterval(get_boxes, 100);
+
+    function getBoxColor(class_type) {
+
+        switch (class_type) {
+            case 0:
+            case 1:
+            case 7:
+                return "green";
+                break;
+            case 2:
+            case 3:
+            case 4:
+                return "red";
+                break;
+            default:
+                return "blue";
+        }
+    }
+
+    const classEnum = {
+        0: "Hardhat",
+        1: "Mask",
+        2: "No Hardhat",
+        3: "No Mask",
+        4: "No Safety Vest",
+        5: "Person",
+        6: "Safety Cone",
+        7: "Safety Vest",
+        8: "Machinery",
+        9: "Vehicle"
+    };
+
+    function getClass(class_type) {
+        return classEnum[class_type];
+    }
+</script>
+
+</html>

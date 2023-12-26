@@ -1,0 +1,1 @@
+cd client && python cam.py

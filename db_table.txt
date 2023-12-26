@@ -1,0 +1,5 @@
+DEFINE TABLE violation_record;
+DEFINE FIELD cameraID ON TABLE violation_record TYPE string;
+DEFINE FIELD workplace ON TABLE violation_record TYPE string;
+DEFINE FIELD time ON TABLE violation_record TYPE datetime DEFAULT time::now()+8h;
+DEFINE FIELD violation_type ON TABLE violation_record TYPE array;

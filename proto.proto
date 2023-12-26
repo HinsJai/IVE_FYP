@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+
+option go_package = "./protos";
+
+
+service Analysis{
+    rpc analysis(Empty) returns (stream Response);
+    rpc get_image(Empty) returns (stream Image);
+}
+
+service DiscordLog {
+    rpc log(LogResponse) returns (Empty);
+}
+
+message Empty{}
+
+message Image{
+    bytes data = 1;
+}
+
+message Item{
+    int32 x1 = 1;
+    int32 y1 = 2;
+    int32 x2 = 3;
+    int32 y2 = 4;
+    Class class_type = 5;
+}
+
+enum Class{
+    HARDHAT = 0;
+    MASK = 1;
+    NO_HARDHAT = 2;
+    NO_MASK = 3;
+    NO_SAFETY_VEST = 4;
+    PERSON = 5;
+    SAFETY_CONE = 6;
+    SAFETY_VEST = 7;
+    MACHINERY = 8;
+    VEHICLE = 9;
+}
+
+message Response{
+    repeated Item item = 1;
+}
+
+message LogResponse {
+    string message = 1;
+    Image image = 2;
+}

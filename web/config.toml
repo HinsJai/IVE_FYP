@@ -1,0 +1,13 @@
+[cam]
+url = "localhost"
+port = 8877
+
+[web]
+url = "127.0.0.1"
+port = 8007
+index = "index"
+
+[server]
+url = "localhost"
+port = 8787
+
