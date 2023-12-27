@@ -113,7 +113,7 @@ func main() {
 
 	// Start the Fiber server
 	go func() {
-		if err := app.Listen(":8007"); err != nil {
+		if err := app.Listen(fmt.Sprintf(":%d", config.web.port)); err != nil {
 			log.Fatalf("Error starting server: %v", err)
 		}
 	}()
@@ -180,20 +180,20 @@ func main() {
 
 	wg.Wait()
 }
-
+// get the toml config 
 func loadConfig() WebConfig {
-	tomlData, _ := toml.LoadFile("config.toml")
+	toml_data, _ := toml.LoadFile("config.toml")
 	web_info := WebInfo{
-		url:  tomlData.Get("web").(*toml.Tree).Get("url").(string),
-		port: tomlData.Get("web").(*toml.Tree).Get("port").(int64),
+		url:  toml_data.Get("web").(*toml.Tree).Get("url").(string),
+		port: toml_data.Get("web").(*toml.Tree).Get("port").(int64),
 	}
 	cam_info := CamInfo{
-		url:  tomlData.Get("cam").(*toml.Tree).Get("url").(string),
-		port: tomlData.Get("cam").(*toml.Tree).Get("port").(int64),
+		url:  toml_data.Get("cam").(*toml.Tree).Get("url").(string),
+		port: toml_data.Get("cam").(*toml.Tree).Get("port").(int64),
 	}
 	server_info := ServerInfo{
-		url:  tomlData.Get("server").(*toml.Tree).Get("url").(string),
-		port: tomlData.Get("server").(*toml.Tree).Get("port").(int64),
+		url:  toml_data.Get("server").(*toml.Tree).Get("url").(string),
+		port: toml_data.Get("server").(*toml.Tree).Get("port").(int64),
 	}
 	return WebConfig{
 		web:    web_info,

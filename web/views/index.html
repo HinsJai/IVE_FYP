@@ -42,11 +42,11 @@
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                return response.json(); // Parse the JSON in the response
+                return response.json();
             })
             .then(json => {
 
-                box = json; // Assign the parsed JSON to the box variable
+                box = json; 
 
             })
             .catch(e => {
