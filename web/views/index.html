@@ -1,93 +1,18 @@
+<!DOCTYPE html>
 <html>
 
+<head>
+    <title>Login</title>
+    <script src="https://unpkg.com/htmx.org@1.9.9"></script>
+</head>
+
 <body>
-    <img id="image" src="{{.url}}" alt="Image" width="640" height="480" hidden>
-    <canvas id="canvas" width="640" height="480"></canvas>
+    <form hx-post="/login" HX-Redirect="true">
+        <label>Email:</label><input name="email"><br />
+        <label>Password:</label><input name="password"><br />
+        <button>Submit</button>
+    </form>
+    <p style="color:red" id="login">{{.error}}</p>
 </body>
-
-<script>
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-    const image = document.getElementById("image");
-    let box = []
-    const url = image.src;
-    async function update_image() {
-        let image = new Image()
-        image.src = `${url}image?v=${new Date().getTime()}`;
-        image.addEventListener("load", function () {
-            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < box.length; ++i) {
-                const scaledX1 = box[i].x1 * (canvas.width / image.width);
-                const scaledY1 = box[i].y1 * (canvas.height / image.height);
-                const scaledWidth = (box[i].x2 - box[i].x1) * (canvas.width / image.width);
-                const scaledHeight = (box[i].y2 - box[i].y1) * (canvas.height / image.height);
-                class_type = box[i].class_type;
-                box_color = getBoxColor(class_type);
-                ctx.beginPath();
-                ctx.strokeStyle = box_color;
-                ctx.lineWidth = 2;
-                ctx.font = "lighter 12px Arial";
-                ctx.fillStyle = "red";
-                ctx.fillText(getClass(class_type), scaledX1, scaledY1 - 5);
-                ctx.rect(scaledX1, scaledY1, scaledWidth, scaledHeight);
-                ctx.stroke();
-            }
-            setTimeout(update_image, 50)
-        });
-    }
-    update_image();
-    async function get_boxes() {
-        fetch(`${url}box`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(json => {
-
-                box = json; 
-
-            })
-            .catch(e => {
-                console.log('There has been a problem with your fetch operation: ' + e.message);
-            });
-    }
-
-    setInterval(get_boxes, 100);
-    function getBoxColor(class_type) {
-        switch (class_type) {
-            case 0:
-            case 1:
-            case 7:
-                return "green";
-                break;
-            case 2:
-            case 3:
-            case 4:
-                return "red";
-                break;
-            default:
-                return "blue";
-        }
-    }
-
-    const classEnum = {
-        0: "Hardhat",
-        1: "Mask",
-        2: "No Hardhat",
-        3: "No Mask",
-        4: "No Safety Vest",
-        5: "Person",
-        6: "Safety Cone",
-        7: "Safety Vest",
-        8: "Machinery",
-        9: "Vehicle"
-    };
-
-    function getClass(class_type) {
-        return classEnum[class_type];
-    }
-</script>
 
 </html>

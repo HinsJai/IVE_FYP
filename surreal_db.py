@@ -20,29 +20,35 @@ class Database:
             await db.signin({"user": self.__user, "pass": self.__pasword})
             await db.use(self.__namespace, self.__db)
             response = await db.query(query, data)
-            print(response)
+            # print(response)
         return response[0]["result"]
 
 
 async def main():
     db = Database("ws://127.0.0.1:8080/rpc", "root", "root", "fyp", "violation_record")
-    await db.get_db_response(
-        """
-        insert into violation_record {
-            cameraID: $cameraID,
-            workplace: $workplace,
-         
-            violation_type: $violation_type,
-        };
-        """,
-        {
-            "cameraID": "c001",
-            "workplace": "TY-IVE",
-            # "time": datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
-            "violation_type": ["no_hardhat", "haha", "999"],
-        },
+    # await db.get_db_response(
+    #     """
+    #     insert into violation_record {
+    #         cameraID: $cameraID,
+    #         workplace: $workplace,
+
+    #         violation_type: $violation_type,
+    #     };
+    #     """,
+    #     {
+    #         "cameraID": "c001",
+    #         "workplace": "TY-IVE",
+    #         # "time": datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f"),
+    #         "violation_type": ["no_hardhat", "haha", "999"],
+    #     },
+    # )
+    # print(await db.get_db_response("select * from user"))
+    print(
+        await db.get_db_response(
+            "select 1 from user where email=$email and password=$password",
+            data={"email": "jason199794@gmail.com", "password": "Aa123456"},
+        )
     )
-    # print(await db.query("select * from violation_record"))
 
     # await db.query("""
     # insert into person {

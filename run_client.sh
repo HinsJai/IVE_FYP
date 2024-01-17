@@ -1,1 +1,1 @@
-cd client && python cam.py
+cd client &&  py -3.11 cam.py

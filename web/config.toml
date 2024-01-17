@@ -3,11 +3,18 @@ url = "localhost"
 port = 8877
 
 [web]
-url = "127.0.0.1"
-port = 8007
+url = "05wbdt0x-8007.asse.devtunnels.ms"
 index = "index"
+port = 8007
 
 [server]
 url = "localhost"
 port = 8787
+
+[user_database]
+url = "ws://localhost:8080/rpc"
+user = "root"
+pass = "root"
+namespace = "fyp"
+database = "violation_record"
 

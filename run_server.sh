@@ -1,1 +1,1 @@
-cd server && python box.py
+cd server &&  py -3.11 box.py

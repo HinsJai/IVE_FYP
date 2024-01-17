@@ -1,5 +1,40 @@
+
+Violation Record
+
 DEFINE TABLE violation_record;
 DEFINE FIELD cameraID ON TABLE violation_record TYPE string;
 DEFINE FIELD workplace ON TABLE violation_record TYPE string;
 DEFINE FIELD time ON TABLE violation_record TYPE datetime DEFAULT time::now()+8h;
 DEFINE FIELD violation_type ON TABLE violation_record TYPE array;
+
+Fire Record
+
+DEFINE TABLE fire_record;
+DEFINE FIELD cameraID ON TABLE fire_record TYPE string;
+DEFINE FIELD workplace ON TABLE fire_record TYPE string;
+DEFINE FIELD time ON TABLE fire_record TYPE datetime DEFAULT time::now()+8h;
+DEFINE FIELD detect_type ON TABLE fire_record TYPE array;
+
+
+User
+
+DEFINE TABLE user;
+DEFINE FIELD email ON TABLE user TYPE string ASSERT string::is::email($value);
+DEFINE FIELD password ON TABLE user TYPE string;
+DEFINE FIELD firstName ON TABLE user TYPE string;
+DEFINE FIELD lastName ON TABLE user TYPE string;
+DEFINE FIELD contact ON TABLE user TYPE int;
+DEFINE FIELD position ON TABLE user TYPE string;
+DEFINE FIELD locked ON TABLE user TYPE bool DEFAULT false;
+DEFINE FIELD created_at ON TABLE user TYPE datetime DEFAULT time::now()+8h;
+
+INSERT INTO user {
+    email: 'jason199794@gmail.com',
+    password: "Aa123456",
+    firstName: "Kwok Hin",
+    lastName: "Kong",
+    contact: 65748125,
+    position: "admin"
+};
+
+

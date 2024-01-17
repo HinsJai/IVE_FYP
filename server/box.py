@@ -23,11 +23,8 @@ sys.path.extend([".."])
 from item_getter import FrameGetter
 from logger import get_logger
 from protos.proto_pb2 import Class, Image, LogResponse, Response
-from protos.proto_pb2_grpc import (
-    AnalysisServicer,
-    DiscordLogStub,
-    add_AnalysisServicer_to_server,
-)
+from protos.proto_pb2_grpc import (AnalysisServicer, DiscordLogStub,
+                                   add_AnalysisServicer_to_server)
 
 with open("config.toml", "rb") as config:
     config = tomllib.load(config)
@@ -152,7 +149,7 @@ class AnalysisServer:
         self.frame_data = base64.b64decode(self.__frame_getter.frame)
         self.np_data = np.frombuffer(self.frame_data, dtype=np.uint8)
         self.frame = cv2.imdecode(self.np_data, flags=cv2.IMREAD_COLOR)
-        if not (result := self.__model.predict(self.frame)):
+        if not (result := self.__model.predict(self.frame, verbose=False)):
             return None
 
         boxes = []

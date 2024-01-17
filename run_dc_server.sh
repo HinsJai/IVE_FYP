@@ -1,1 +1,1 @@
-cd server && python discord_log_server.py
+cd server &&  py -3.11 discord_log_server.py
