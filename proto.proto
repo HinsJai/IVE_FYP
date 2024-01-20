@@ -44,6 +44,15 @@ message Response{
     repeated Item item = 1;
 }
 
+// service TimAnalysis{
+//     rpc get_image_and_box(Empty) returns (stream TimResponse);
+// }
+
+// message TimResponse{
+//     repeated Item item = 1;
+//     Image image = 2;
+// }
+
 message LogResponse {
     string message = 1;
     Image image = 2;

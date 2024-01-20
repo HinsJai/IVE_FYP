@@ -4,6 +4,7 @@ port = 8877
 
 [web]
 url = "05wbdt0x-8007.asse.devtunnels.ms"
+# url = "localhost:8007"
 index = "index"
 port = 8007
 

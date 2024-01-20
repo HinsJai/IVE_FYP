@@ -221,6 +221,7 @@ func login(c *fiber.Ctx) error {
 		return c.SendString(fmt.Sprintf("Error: %v", err))
 	}
 	if user_found {
+		// c.Request().Header.Set("HX-Redirect", fmt.Sprintf("https://%s", config.web.url))
 		return c.Redirect("/stream")
 	}
 	return c.Redirect("/?error=true")
@@ -243,6 +244,12 @@ func main() {
 		AllowMethods:     "*",
 		AllowCredentials: true,
 	}))
+
+	app.Static("/images", "./images")
+
+	app.Static("/js", "./js")
+
+	app.Static("/css", "./css")
 
 	app.Post("/login", login)
 
