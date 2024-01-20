@@ -4,7 +4,6 @@ import grpc
 
 import protos.proto_pb2 as proto__pb2
 
-
 class AnalysisStub(object):
     """Missing associated documentation comment in .proto file."""
 
@@ -93,6 +92,100 @@ class Analysis(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_stream(request, target, '/Analysis/get_image',
+            proto__pb2.Empty.SerializeToString,
+            proto__pb2.Image.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+
+class TimAnalysisStub(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.analysis = channel.unary_stream(
+                '/TimAnalysis/analysis',
+                request_serializer=proto__pb2.Empty.SerializeToString,
+                response_deserializer=proto__pb2.TimResponse.FromString,
+                )
+        self.get_image = channel.unary_stream(
+                '/TimAnalysis/get_image',
+                request_serializer=proto__pb2.Empty.SerializeToString,
+                response_deserializer=proto__pb2.Image.FromString,
+                )
+
+
+class TimAnalysisServicer(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def analysis(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def get_image(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_TimAnalysisServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'analysis': grpc.unary_stream_rpc_method_handler(
+                    servicer.analysis,
+                    request_deserializer=proto__pb2.Empty.FromString,
+                    response_serializer=proto__pb2.TimResponse.SerializeToString,
+            ),
+            'get_image': grpc.unary_stream_rpc_method_handler(
+                    servicer.get_image,
+                    request_deserializer=proto__pb2.Empty.FromString,
+                    response_serializer=proto__pb2.Image.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'TimAnalysis', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+
+
+ # This class is part of an EXPERIMENTAL API.
+class TimAnalysis(object):
+    """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def analysis(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(request, target, '/TimAnalysis/analysis',
+            proto__pb2.Empty.SerializeToString,
+            proto__pb2.TimResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def get_image(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(request, target, '/TimAnalysis/get_image',
             proto__pb2.Empty.SerializeToString,
             proto__pb2.Image.FromString,
             options, channel_credentials,

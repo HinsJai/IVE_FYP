@@ -13,27 +13,32 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0bproto.proto\"\x07\n\x05\x45mpty\"\x15\n\x05Image\x12\x0c\n\x04\x64\x61ta\x18\x01 \x01(\x0c\"R\n\x04Item\x12\n\n\x02x1\x18\x01 \x01(\x05\x12\n\n\x02y1\x18\x02 \x01(\x05\x12\n\n\x02x2\x18\x03 \x01(\x05\x12\n\n\x02y2\x18\x04 \x01(\x05\x12\x1a\n\nclass_type\x18\x05 \x01(\x0e\x32\x06.Class\"\x1f\n\x08Response\x12\x13\n\x04item\x18\x01 \x03(\x0b\x32\x05.Item\"5\n\x0bLogResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\x12\x15\n\x05image\x18\x02 \x01(\x0b\x32\x06.Image*\x99\x01\n\x05\x43lass\x12\x0b\n\x07HARDHAT\x10\x00\x12\x08\n\x04MASK\x10\x01\x12\x0e\n\nNO_HARDHAT\x10\x02\x12\x0b\n\x07NO_MASK\x10\x03\x12\x12\n\x0eNO_SAFETY_VEST\x10\x04\x12\n\n\x06PERSON\x10\x05\x12\x0f\n\x0bSAFETY_CONE\x10\x06\x12\x0f\n\x0bSAFETY_VEST\x10\x07\x12\r\n\tMACHINERY\x10\x08\x12\x0b\n\x07VEHICLE\x10\t2J\n\x08\x41nalysis\x12\x1f\n\x08\x61nalysis\x12\x06.Empty\x1a\t.Response0\x01\x12\x1d\n\tget_image\x12\x06.Empty\x1a\x06.Image0\x01\x32)\n\nDiscordLog\x12\x1b\n\x03log\x12\x0c.LogResponse\x1a\x06.Emptyb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0bproto.proto\"9\n\x0bTimResponse\x12\x13\n\x04item\x18\x01 \x03(\x0b\x32\x05.Item\x12\x15\n\x05image\x18\x02 \x01(\x0b\x32\x06.Image\"\x07\n\x05\x45mpty\"\x15\n\x05Image\x12\x0c\n\x04\x64\x61ta\x18\x01 \x01(\x0c\"R\n\x04Item\x12\n\n\x02x1\x18\x01 \x01(\x05\x12\n\n\x02y1\x18\x02 \x01(\x05\x12\n\n\x02x2\x18\x03 \x01(\x05\x12\n\n\x02y2\x18\x04 \x01(\x05\x12\x1a\n\nclass_type\x18\x05 \x01(\x0e\x32\x06.Class\"\x1f\n\x08Response\x12\x13\n\x04item\x18\x01 \x03(\x0b\x32\x05.Item\"5\n\x0bLogResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\x12\x15\n\x05image\x18\x02 \x01(\x0b\x32\x06.Image*\x99\x01\n\x05\x43lass\x12\x0b\n\x07HARDHAT\x10\x00\x12\x08\n\x04MASK\x10\x01\x12\x0e\n\nNO_HARDHAT\x10\x02\x12\x0b\n\x07NO_MASK\x10\x03\x12\x12\n\x0eNO_SAFETY_VEST\x10\x04\x12\n\n\x06PERSON\x10\x05\x12\x0f\n\x0bSAFETY_CONE\x10\x06\x12\x0f\n\x0bSAFETY_VEST\x10\x07\x12\r\n\tMACHINERY\x10\x08\x12\x0b\n\x07VEHICLE\x10\t2J\n\x08\x41nalysis\x12\x1f\n\x08\x61nalysis\x12\x06.Empty\x1a\t.Response0\x01\x12\x1d\n\tget_image\x12\x06.Empty\x1a\x06.Image0\x01\x32P\n\x0bTimAnalysis\x12\"\n\x08\x61nalysis\x12\x06.Empty\x1a\x0c.TimResponse0\x01\x12\x1d\n\tget_image\x12\x06.Empty\x1a\x06.Image0\x01\x32)\n\nDiscordLog\x12\x1b\n\x03log\x12\x0c.LogResponse\x1a\x06.EmptyB\nZ\x08./protosb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'proto_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
-  _globals['_CLASS']._serialized_start=220
-  _globals['_CLASS']._serialized_end=373
-  _globals['_EMPTY']._serialized_start=15
-  _globals['_EMPTY']._serialized_end=22
-  _globals['_IMAGE']._serialized_start=24
-  _globals['_IMAGE']._serialized_end=45
-  _globals['_ITEM']._serialized_start=47
-  _globals['_ITEM']._serialized_end=129
-  _globals['_RESPONSE']._serialized_start=131
-  _globals['_RESPONSE']._serialized_end=162
-  _globals['_LOGRESPONSE']._serialized_start=164
-  _globals['_LOGRESPONSE']._serialized_end=217
-  _globals['_ANALYSIS']._serialized_start=375
-  _globals['_ANALYSIS']._serialized_end=449
-  _globals['_DISCORDLOG']._serialized_start=451
-  _globals['_DISCORDLOG']._serialized_end=492
+  DESCRIPTOR._serialized_options = b'Z\010./protos'
+  _globals['_CLASS']._serialized_start=279
+  _globals['_CLASS']._serialized_end=432
+  _globals['_TIMRESPONSE']._serialized_start=15
+  _globals['_TIMRESPONSE']._serialized_end=72
+  _globals['_EMPTY']._serialized_start=74
+  _globals['_EMPTY']._serialized_end=81
+  _globals['_IMAGE']._serialized_start=83
+  _globals['_IMAGE']._serialized_end=104
+  _globals['_ITEM']._serialized_start=106
+  _globals['_ITEM']._serialized_end=188
+  _globals['_RESPONSE']._serialized_start=190
+  _globals['_RESPONSE']._serialized_end=221
+  _globals['_LOGRESPONSE']._serialized_start=223
+  _globals['_LOGRESPONSE']._serialized_end=276
+  _globals['_ANALYSIS']._serialized_start=434
+  _globals['_ANALYSIS']._serialized_end=508
+  _globals['_TIMANALYSIS']._serialized_start=510
+  _globals['_TIMANALYSIS']._serialized_end=590
+  _globals['_DISCORDLOG']._serialized_start=592
+  _globals['_DISCORDLOG']._serialized_end=633
 # @@protoc_insertion_point(module_scope)

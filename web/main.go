@@ -62,8 +62,10 @@ type User struct {
 }
 
 var (
-	frame_client pb.AnalysisClient
-	box_client   pb.AnalysisClient
+	// frame_client pb.AnalysisClient
+	// box_client   pb.AnalysisClient
+	frame_client pb.TimAnalysisClient
+	box_client   pb.TimAnalysisClient
 	frame_data   []byte
 	box_data     []Box
 	db           *surrealdb.DB
@@ -91,18 +93,32 @@ func setup_db() {
 	}
 }
 
+// func setup_clients() {
+// 	var err error
+// 	frame_conn, err = grpc.Dial(fmt.Sprintf("%s:%d", config.cam.url, config.cam.port), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
+// 	if err != nil {
+// 		log.Fatalf("did not connect to FrameGetter: %v", err)
+// 	}
+// 	frame_client = pb.NewTimAnalysisClient(frame_conn)
+// 	box_conn, err = grpc.Dial(fmt.Sprintf("%s:%d", config.server.url, config.server.port), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
+// 	if err != nil {
+// 		log.Fatalf("did not connect to BoxGetter: %v", err)
+// 	}
+// 	box_client = pb.NewTimAnalysisClient(box_conn)
+// }
+
 func setup_clients() {
 	var err error
-	frame_conn, err = grpc.Dial(fmt.Sprintf("%s:%d", config.cam.url, config.cam.port), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
+	frame_conn, err = grpc.Dial(config.cam.url, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	if err != nil {
 		log.Fatalf("did not connect to FrameGetter: %v", err)
 	}
-	frame_client = pb.NewAnalysisClient(frame_conn)
-	box_conn, err = grpc.Dial(fmt.Sprintf("%s:%d", config.server.url, config.server.port), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
+	frame_client = pb.NewTimAnalysisClient(frame_conn)
+	box_conn, err = grpc.Dial(config.server.url, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	if err != nil {
 		log.Fatalf("did not connect to BoxGetter: %v", err)
 	}
-	box_client = pb.NewAnalysisClient(box_conn)
+	box_client = pb.NewTimAnalysisClient(box_conn)
 }
 
 func index(c *fiber.Ctx) error {
@@ -152,6 +168,12 @@ func start_server() {
 		log.Fatalf("Error starting server: %v", err)
 	}
 }
+
+// func start_server() {
+// 	if err := app.Listen(fmt.Sprintf("https://%s", config.web.url)); err != nil {
+// 		log.Fatalf("Error starting server: %v", err)
+// 	}
+// }
 
 func get_image_data(wg *sync.WaitGroup) {
 	defer wg.Done()

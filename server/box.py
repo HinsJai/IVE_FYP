@@ -49,7 +49,7 @@ class AnalysisServer:
         self.__logger = get_logger("Model Server")
         self.__server = grpc.server(futures.ThreadPoolExecutor())
         self.__frame_getter = FrameGetter(CAM_URL, CAM_PORT)
-        self.__model = YOLO("../model/ppe.pt")
+        self.__model = YOLO("../model/best_ppe.pt")
         self.__reset_counter()
         self.__logger_channel = grpc.insecure_channel(
             f"{DISCORD_LOGGER_URL}:{DISCORD_LOGGER_PORT}"

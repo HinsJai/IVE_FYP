@@ -1,16 +1,23 @@
 [cam]
-url = "localhost"
-port = 8877
+# url = "127.0.0.1"
+# port = 8877
+url = "localhost:8878"
+port = 8878
+
+
+[server]
+# url = "127.0.0.1"
+# port = 8787
+url = "localhost:8788"
+# url = "05wbdt0x-8788.asse.devtunnels.ms"
+port = 8788
+
 
 [web]
 url = "05wbdt0x-8007.asse.devtunnels.ms"
 # url = "localhost:8007"
 index = "index"
 port = 8007
-
-[server]
-url = "localhost"
-port = 8787
 
 [user_database]
 url = "ws://localhost:8080/rpc"
@@ -19,3 +26,32 @@ pass = "root"
 namespace = "fyp"
 database = "violation_record"
 
+[tim_cam]
+url = ""
+port = 0
+
+[tim_server]
+url = ""
+port = 0
+
+# [cam]
+# url = "localhost"
+# port = 8878
+
+# [web]
+# url = "05wbdt0x-8007.asse.devtunnels.ms"
+# # url = "29zpmw89-8007.asse.devtunnels.ms"
+# # url = "localhost:8007"
+# index = "index"
+# port = 8007
+
+# [server]
+# url = "localhost"
+# port = 8788
+
+# [user_database]
+# url = "ws://localhost:8080/rpc"
+# user = "root"
+# pass = "root"
+# namespace = "fyp"
+# database = "violation_record"

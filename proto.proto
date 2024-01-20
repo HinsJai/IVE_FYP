@@ -9,6 +9,16 @@ service Analysis{
     rpc get_image(Empty) returns (stream Image);
 }
 
+service TimAnalysis{
+    rpc analysis(Empty) returns (stream TimResponse);
+    rpc get_image(Empty) returns (stream Image);
+}
+
+message TimResponse{
+    repeated Item item = 1;
+    Image image = 2;
+}
+
 service DiscordLog {
     rpc log(LogResponse) returns (Empty);
 }
