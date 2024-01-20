@@ -4,6 +4,7 @@ import grpc
 
 import protos.proto_pb2 as proto__pb2
 
+
 class AnalysisStub(object):
     """Missing associated documentation comment in .proto file."""
 

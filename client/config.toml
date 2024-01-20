@@ -1,6 +1,6 @@
 [cam]
 url = "localhost"
-port = 8877
+port = 8878
 camera = 0
 
 

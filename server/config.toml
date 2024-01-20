@@ -7,11 +7,11 @@ database = "violation_record"
 
 [cam]
 url = "localhost"
-port = 8877
+port = 8878
 
 [server]
 url = "localhost"
-port = 8787
+port = 8788
 
 [discord]
 ip= "127.0.0.1"

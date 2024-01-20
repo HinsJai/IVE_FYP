@@ -30,12 +30,10 @@ MACHINERY: Class
 VEHICLE: Class
 
 class TimResponse(_message.Message):
-    __slots__ = ["item", "image"]
+    __slots__ = ["item"]
     ITEM_FIELD_NUMBER: _ClassVar[int]
-    IMAGE_FIELD_NUMBER: _ClassVar[int]
     item: _containers.RepeatedCompositeFieldContainer[Item]
-    image: Image
-    def __init__(self, item: _Optional[_Iterable[_Union[Item, _Mapping]]] = ..., image: _Optional[_Union[Image, _Mapping]] = ...) -> None: ...
+    def __init__(self, item: _Optional[_Iterable[_Union[Item, _Mapping]]] = ...) -> None: ...
 
 class Empty(_message.Message):
     __slots__ = []

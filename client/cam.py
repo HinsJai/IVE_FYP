@@ -9,7 +9,8 @@ from typing import NoReturn, Self
 
 import cv2
 import grpc
-from numpy.typing import NDArray
+
+# from numpy.typing import NDArray
 
 sys.path.extend([".."])
 import tomllib

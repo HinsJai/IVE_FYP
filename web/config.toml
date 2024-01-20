@@ -1,21 +1,21 @@
 [cam]
-# url = "127.0.0.1"
-# port = 8877
 url = "localhost:8878"
 port = 8878
 
-
 [server]
-# url = "127.0.0.1"
-# port = 8787
 url = "localhost:8788"
-# url = "05wbdt0x-8788.asse.devtunnels.ms"
 port = 8788
 
+[tim_cam]
+url = "localhost:8878"
+port = 8878
+
+[tim_server]
+url = "localhost:8788"
+port = 8788
 
 [web]
 url = "05wbdt0x-8007.asse.devtunnels.ms"
-# url = "localhost:8007"
 index = "index"
 port = 8007
 
@@ -26,13 +26,6 @@ pass = "root"
 namespace = "fyp"
 database = "violation_record"
 
-[tim_cam]
-url = ""
-port = 0
-
-[tim_server]
-url = ""
-port = 0
 
 # [cam]
 # url = "localhost"
