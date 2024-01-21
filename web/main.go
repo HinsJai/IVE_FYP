@@ -115,7 +115,7 @@ func setup_client_pair(cam_url string, server_url string) {
 func get_image_data(wg *sync.WaitGroup, id int) {
 	defer wg.Done()
 	var err error
-
+	//error index out of range
 	image_stream[id], err = frame_clients[id].GetImage(context.Background(), &pb.Empty{}, grpc.MaxCallRecvMsgSize(1024*1024*1024))
 	if err != nil {
 		log.Fatalf("could not call GetImage: %v", err)
@@ -135,7 +135,7 @@ func get_image_data(wg *sync.WaitGroup, id int) {
 
 func get_box_data(wg *sync.WaitGroup, id int) {
 	defer wg.Done()
-
+	//error index out of range
 	box_stream[id], _ = box_clients[id].Analysis(context.Background(), &pb.Empty{}, grpc.MaxCallRecvMsgSize(1024*1024*1024))
 	for {
 		response, err := box_stream[id].Recv()
