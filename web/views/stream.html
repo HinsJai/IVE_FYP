@@ -4,33 +4,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Streaming</title>
+    <title>FYP</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://cdn.tailwindcss.com/3.4.1"></script>
     <script src="https://kit.fontawesome.com/c30932d00b.js" crossorigin="anonymous"></script>
 </head>
 
+<body class="flex h-screen gap-2 bg-black">
+    <div class="basis-56">
+        <div style="height: 90%;">
+            <div class="flex justify-start p-6 mb-5 gap-2">
+                <img src="../images/logo2.png" class="w-12">
+                <span class="text-4xl font-bold text-[#FFBE00]">COS</span>
+            </div>
+            <a href="#" class="flex text-slate-50 gap-5 text-xl p-6 hover:text-[#FFBE00]">
+                <i class="fa-solid fa-table-columns pt-1"></i>
+                <span class="uppercase">dashboard</span>
+            </a>
+            <a href="#" class="flex text-slate-50 gap-5 text-xl p-6 hover:text-[#FFBE00]">
+                <i class="fa-brands fa-watchman-monitoring pt-1"></i>
+                <span class="uppercase">surveillance</span>
+            </a>
+            <a href="#" class="flex text-slate-50 gap-5 text-xl p-6 hover:text-[#FFBE00]">
+                <i class="fa-solid fa-microchip pt-1"></i>
+                <span class="uppercase">hardware</span>
+            </a>
+            <a href="/records" class="flex text-slate-50 gap-6 text-xl p-6 hover:text-[#FFBE00]">
+                <i class="fa-solid fa-file pt-1"></i>
+                <span class="uppercase">log history</span>
+            </a>
+        </div>
+        <div style="height: 10%;" class="flex justify-center items-center">
+            <button class="text-slate-50 uppercase text-xl hover:text-rose-900" onclick="logout()"><i
+                    class="fa-solid fa-right-from-bracket pr-5"></i>log out</button>
+        </div>
+    </div>
+    <div class="flex-1">
+        <div style="height: 10%;" class="bg-[#222222] text-slate-50 flex items-center pl-6">
+            <span class="text-xl mr-5">Default </span>
+            <i class="fa-solid fa-plus text-xl hover:bg-[#FFBE00] px-2 py-1 rounded-md cursor-pointer"></i>
+        </div>
+        <div style="height: 80%;" class="grid grid-cols-2 grid-rows-2 gap-2">
+            <div class="overflow-hidden">
+                <img id="image1" src="{{.url}}" alt="cam-01" width="640" height="480" hidden>
+                <canvas id="canvas" class="bg-slate-500 w-full h-full"></canvas>
+            </div>
+            <div class="overflow-hidden">
+                <img id="image2" src="{{.url2}}" class="bg-no-repeat bg-center w-full h-full">
+                <canvas id="canvas" class="bg-slate-500 w-full h-full"></canvas>
+            </div>
+            <div class="overflow-hidden">
+                <img id="image3" src="{{.url}}" class="bg-no-repeat bg-center w-full h-full">
+            </div>
+            <div class="overflow-hidden">
+                <img id="image4" src="{{.url}}" class="bg-no-repeat bg-center w-full h-full">
+            </div>
+        </div>
+        <div style="height: 10%;" class="bg-[#222222]">
 
-<body>
-    <img id="image" src="{{.url}}" alt="Image" width="640" height="480" hidden>
-    <canvas id="canvas" width="640" height="480"></canvas>
+        </div>
+    </div>
+    <div class="basis-72 px-3 py-7">
+        <div style="height: 7%;">
+            <label class="relative">
+                <input type="text" class="bg-[#222222] text-slate-50 outline-none pl-2 pr-8">
+                <i class="fa-solid fa-magnifying-glass text-slate-50 absolute right-2 top-1"></i>
+            </label>
+            <i
+                class="fa-solid fa-arrow-up-a-z text-slate-50 ml-1 hover:bg-[#FFBE00] px-1 py-1 rounded-md cursor-pointer"></i>
+        </div>
+        <div style="height: 86%;">
+            <div class="overflow-hidden mb-2">
+                <img src="hin_gor_1.png" class="bg-no-repeat bg-center w-full h-full">
+            </div>
+            <div class="overflow-hidden mb-2">
+                <img src="hin_gor_2.png" class="bg-no-repeat bg-center w-full h-full">
+            </div>
+            <div class="overflow-hidden">
+                <img src="hin_gor_3.png" class="bg-no-repeat bg-center w-full h-full">
+            </div>
+        </div>
+        <hr>
+        <div style="height: 6%;" class="flex justify-between items-center text-lg text-slate-600">
+            <span class="text-slate-50">Control</span>
+            <i
+                class="fa-solid fa-chevron-up text-slate-50 pt-1 hover:bg-[#FFBE00] px-1 py-1 rounded-md cursor-pointer"></i>
+        </div>
+    </div>
 </body>
 
-<!-- <script>
-    document.getElementById("login").hidden = true;
-</script> -->
-
 <script>
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-    const image = document.getElementById("image");
-    let box = []
-    const url = image.src;
-    async function update_image() {
+    //store 4 cams box
+    boxes = [[], [], [], []]
+
+    async function update_image_box(box_id, stream_source) {
+        const image = document.getElementById(box_id);
+        const url = image.src;
+        update_image(stream_source, url);
+        setInterval(get_boxes, 100, stream_source, url);
+    }
+
+    async function update_image(stream_source, url) {
         let image = new Image()
-        console.log(url)
-        image.src = `${url}image?v=${new Date().getTime()}`;
+        image.src = `${url}image?v=${new Date().getTime()}&stream_source=${stream_source}`;
         image.addEventListener("load", function () {
             ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+            let box = boxes[stream_source]
             for (let i = 0; i < box.length; ++i) {
                 const scaledX1 = box[i].x1 * (canvas.width / image.width);
                 const scaledY1 = box[i].y1 * (canvas.height / image.height);
@@ -47,12 +126,12 @@
                 ctx.rect(scaledX1, scaledY1, scaledWidth, scaledHeight);
                 ctx.stroke();
             }
-            setTimeout(update_image, 50)
+            setTimeout(update_image, 50, stream_source, url)
         });
     }
-    update_image();
-    async function get_boxes() {
-        fetch(`${url}box`)
+
+    async function get_boxes(stream_source, url) {
+        fetch(`${url}box?stream_source=${stream_source}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -60,26 +139,36 @@
                 return response.json();
             })
             .then(json => {
-                box = json;
+                boxes[stream_source] = json;
             })
             .catch(e => {
                 console.log('There has been a problem with your fetch operation: ' + e.message);
             });
     }
 
-    setInterval(get_boxes, 100);
+    function resize() {
+        const canvas_width = 1003.97 / (2552 - 224 - 288) * (innerWidth - 224 - 288)
+        const canvas_height = 279.2 / 708 * innerHeight
+        canvas.style.width = canvas_width + "px"
+        canvas.style.height = canvas_height + "px"
+        canvas.width = canvas_width * scale;
+        canvas.height = canvas_height * scale;
+        if (firstTimeResize) {
+            ctx.scale(scale, scale);
+            firstTimeResize = false;
+        }
+    }
+
     function getBoxColor(class_type) {
         switch (class_type) {
             case 0:
             case 1:
             case 7:
                 return "green";
-                break;
             case 2:
             case 3:
             case 4:
                 return "red";
-                break;
             default:
                 return "blue";
         }
@@ -100,6 +189,24 @@
 
     function getClass(class_type) {
         return classEnum[class_type];
+    }
+
+    function logout() {
+        window.location.href = '/'
+    }
+</script>
+
+<script>
+    const canvas_width = 1003.97 / (2552 - 224 - 288) * (innerWidth - 224 - 288)
+    const canvas_height = 279.2 / 708 * innerHeight
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var scale = window.devicePixelRatio;
+    var firstTimeResize = true
+    window.onresize = resize
+    resize()
+    for (let i = 0; i < 4; ++i) {
+        update_image_box(`image${i + 1}`, i)
     }
 </script>
 

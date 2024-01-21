@@ -29,12 +29,6 @@ SAFETY_VEST: Class
 MACHINERY: Class
 VEHICLE: Class
 
-class TimResponse(_message.Message):
-    __slots__ = ["item"]
-    ITEM_FIELD_NUMBER: _ClassVar[int]
-    item: _containers.RepeatedCompositeFieldContainer[Item]
-    def __init__(self, item: _Optional[_Iterable[_Union[Item, _Mapping]]] = ...) -> None: ...
-
 class Empty(_message.Message):
     __slots__ = []
     def __init__(self) -> None: ...

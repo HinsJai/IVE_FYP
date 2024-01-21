@@ -66,23 +66,17 @@ type User struct {
 }
 
 var (
-	box_client       pb.AnalysisClient
-	frame_client     pb.AnalysisClient
-	frame_tim_client pb.TimAnalysisClient
-	box_tim_client   pb.TimAnalysisClient
-	image_stream     pb.Analysis_GetImageClient
-	box_stream       pb.Analysis_AnalysisClient
-	image_tim_stream pb.TimAnalysis_GetImageClient
-	box_tim_stream   pb.TimAnalysis_AnalysisClient
-	frame_data       []byte
-	box_data         []Box
-	frame_tim_data   []byte
-	box_tim_data     []Box
-	db               *surrealdb.DB
-	config           WebConfig
-	box_conn         *grpc.ClientConn
-	frame_conn       *grpc.ClientConn
-	app              *fiber.App
+	box_clients   []pb.AnalysisClient
+	frame_clients []pb.AnalysisClient
+	image_stream  []pb.Analysis_GetImageClient
+	box_stream    []pb.Analysis_AnalysisClient
+	frame_data    [][]byte
+	box_data      [][]Box
+	db            *surrealdb.DB
+	config        WebConfig
+	box_conn      *grpc.ClientConn
+	frame_conn    *grpc.ClientConn
+	app           *fiber.App
 )
 
 func setup_db() {
@@ -102,211 +96,67 @@ func setup_db() {
 	}
 }
 
-func setup_clients(cam_url string, server_url string, clientType string) {
+func setup_client_pair(cam_url string, server_url string) {
 	var err error
-
 	frame_conn, err = grpc.Dial(cam_url, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	if err != nil {
 		log.Fatalf("did not connect to FrameGetter: %v", err)
 	}
-	switch clientType {
-	case "tim":
-		frame_tim_client = pb.NewTimAnalysisClient(frame_conn)
-	case "jason":
-		frame_client = pb.NewAnalysisClient(frame_conn)
-	default:
-		log.Fatalf("Invalid client type: %s", clientType)
-	}
-
 	box_conn, err = grpc.Dial(server_url, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
-	switch clientType {
-	case "tim":
-		box_tim_client = pb.NewTimAnalysisClient(box_conn)
-	case "jason":
-		box_client = pb.NewAnalysisClient(box_conn)
-	default:
-		log.Fatalf("Invalid client type: %s", clientType)
-	}
-
+	frame_client := pb.NewAnalysisClient(frame_conn)
+	box_client := pb.NewAnalysisClient(box_conn)
+	frame_clients = append(frame_clients, frame_client)
+	box_clients = append(box_clients, box_client)
 }
 
-// type Client interface {
-// 	GetImage(ctx context.Context, in *pb.Empty, opts ...grpc.CallOption) (pb.Analysis_GetImageClient, error)
-// 	Analysis(ctx context.Context, in *pb.Empty, opts ...grpc.CallOption) (pb.Analysis_AnalysisClient, error)
-// }
-
-// func get_image_data(wg *sync.WaitGroup, client Client, data *[]byte) {
-// 	defer wg.Done()
-// 	stream, err := client.GetImage(context.Background(), &pb.Empty{})
-// 	if err != nil {
-// 		log.Printf("could not call GetImage: %v", err)
-// 		return
-// 	}
-// 	for {
-// 		image, err := stream.Recv()
-// 		if err == io.EOF {
-// 			break
-// 		}
-// 		if err != nil {
-// 			log.Printf("error receiving from GetImage stream: %v", err)
-// 			return
-// 		}
-// 		decoded_data, err := base64.StdEncoding.DecodeString(string(image.Data[:]))
-// 		if err != nil {
-// 			log.Printf("error decoding frame data: %v", err)
-// 			return
-// 		}
-// 		*data = decoded_data
-// 	}
-// }
-
-func get_image_data(wg *sync.WaitGroup, clientType string, client interface{}, stream pb.Analysis_GetImageClient, data *[]byte) {
+func get_image_data(wg *sync.WaitGroup, id int) {
 	defer wg.Done()
 	var err error
-	switch clientType {
-	case "tim":
-		tim_client, ok := client.(pb.TimAnalysisClient)
-		if !ok {
-			log.Fatalf("Invalid client type for Tim: %s", clientType)
-		}
-		image_tim_stream, err = tim_client.GetImage(context.Background(), &pb.Empty{})
-	case "jason":
-		client, ok := client.(pb.AnalysisClient)
-		if !ok {
-			log.Fatalf("Invalid client type for Jason: %s", clientType)
-		}
-		image_stream, err = client.GetImage(context.Background(), &pb.Empty{})
-	default:
-		log.Fatalf("Invalid client type: %s", clientType)
-	}
 
+	image_stream[id], err = frame_clients[id].GetImage(context.Background(), &pb.Empty{}, grpc.MaxCallRecvMsgSize(1024*1024*1024))
 	if err != nil {
 		log.Fatalf("could not call GetImage: %v", err)
 	}
 	for {
-		var image *pb.Image
-		switch clientType {
-		case "tim":
-			image, err = image_tim_stream.Recv()
-		case "jason":
-			image, err = image_stream.Recv()
-		default:
-			log.Fatalf("Invalid client type: %s", clientType)
-		}
+		image, err := image_stream[id].Recv()
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
 			log.Fatalf("error receiving from GetImage stream: %v", err)
 		}
-		decoded_data, err := base64.StdEncoding.DecodeString(string(image.Data[:]))
-		if err != nil {
-			log.Fatalf("error decoding frame data: %v", err)
-		}
-		*data = decoded_data
+		decoded_data, _ := base64.StdEncoding.DecodeString(string(image.Data[:]))
+		frame_data[id] = decoded_data
 	}
 }
 
-// func get_box_data(wg *sync.WaitGroup, client Client, data *[]Box) {
-// 	defer wg.Done()
-// 	stream, err := client.Analysis(context.Background(), &pb.Empty{})
-// 	if err != nil {
-// 		log.Printf("could not call GetBox: %v", err)
-// 		return
-// 	}
-// 	for {
-// 		var localBoxData []Box
-// 		response, err := stream.Recv()
-// 		if err == io.EOF {
-// 			break
-// 		}
-// 		if err != nil {
-// 			log.Printf("error receiving from Box Analysis stream: %v", err)
-// 			return
-// 		}
-// 		for _, item := range response.Item {
-// 			box := Box{
-// 				X1:        int(item.X1),
-// 				Y1:        int(item.Y1),
-// 				X2:        int(item.X2),
-// 				Y2:        int(item.Y2),
-// 				ClassType: int(item.ClassType),
-// 			}
-// 			localBoxData = append(localBoxData, box)
-// 		}
-// 		*data = localBoxData
-// 	}
-// }
-
-func get_box_data(wg *sync.WaitGroup, clientType string, client interface{}, stream pb.Analysis_AnalysisClient, data *[]Box) {
+func get_box_data(wg *sync.WaitGroup, id int) {
 	defer wg.Done()
-	var err error
 
-	switch clientType {
-	case "tim":
-		box_tim_client, ok := client.(pb.TimAnalysisClient)
-		if !ok {
-			log.Fatalf("Invalid client type for Tim: %s", clientType)
-		}
-		box_tim_stream, err = box_tim_client.Analysis(context.Background(), &pb.Empty{})
-	case "jason":
-		box_client, ok := client.(pb.AnalysisClient)
-		if !ok {
-			log.Fatalf("Invalid client type for Jason: %s", clientType)
-		}
-		box_stream, err = box_client.Analysis(context.Background(), &pb.Empty{})
-	default:
-		log.Fatalf("Invalid client type: %s", clientType)
-	}
-	if err != nil {
-		log.Fatalf("could not call GetBox: %v", err)
-	}
+	box_stream[id], _ = box_clients[id].Analysis(context.Background(), &pb.Empty{}, grpc.MaxCallRecvMsgSize(1024*1024*1024))
 	for {
-		var localBoxData []Box
-		switch clientType {
-		case "tim":
-			response, err := box_tim_stream.Recv()
-			if err != nil {
-				log.Fatalf("error receiving from Box Analysis stream: %v", err)
-			}
-			for _, item := range response.Item {
-				box := Box{
-					X1:        int(item.X1),
-					Y1:        int(item.Y1),
-					X2:        int(item.X2),
-					Y2:        int(item.Y2),
-					ClassType: int(item.ClassType),
-				}
-				localBoxData = append(localBoxData, box)
-			}
-		case "jason":
-			response, err := box_stream.Recv()
-			if err != nil {
-				log.Fatalf("error receiving from Box Analysis stream: %v", err)
-			}
-			for _, item := range response.Item {
-				box := Box{
-					X1:        int(item.X1),
-					Y1:        int(item.Y1),
-					X2:        int(item.X2),
-					Y2:        int(item.Y2),
-					ClassType: int(item.ClassType),
-				}
-				localBoxData = append(localBoxData, box)
-			}
-		default:
-			log.Fatalf("Invalid client type: %s", clientType)
-		}
+		response, err := box_stream[id].Recv()
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
-			log.Fatalf("error receiving from Analysis stream: %v", err)
+			log.Fatalf("error receiving from Box Analysis stream: %v", err)
 		}
-		*data = localBoxData
+		var local_box_data []Box
+		for _, item := range response.Item {
+			box := Box{
+				X1:        int(item.X1),
+				Y1:        int(item.Y1),
+				X2:        int(item.X2),
+				Y2:        int(item.Y2),
+				ClassType: int(item.ClassType),
+			}
+			local_box_data = append(local_box_data, box)
+		}
+		box_data[id] = local_box_data
 	}
 }
 
@@ -315,6 +165,7 @@ func index(c *fiber.Ctx) error {
 	if c.QueryBool("error") {
 		err = "Invalid email or password"
 	}
+
 	return c.Render("index", fiber.Map{
 		"request": c,
 		"error":   err,
@@ -340,37 +191,26 @@ func get_stream(c *fiber.Ctx) error {
 	return c.Render("stream", fiber.Map{
 		"request": c,
 		"url":     fmt.Sprintf("https://%s", config.web.url),
+		"url2":    fmt.Sprintf("https://%s", config.cam.tim_url),
 	})
 }
 
-func get_image(c *fiber.Ctx, clientType string) error {
+func get_image(c *fiber.Ctx) error {
 	c.Set("Content-Type", "image/jpeg")
-	switch clientType {
-	case "tim":
-		return c.Send(frame_tim_data)
-	case "jason":
-		return c.Send(frame_data)
-	default:
-		log.Fatalf("Invalid client type: %s", clientType)
+	id := c.QueryInt("stream_source", -1)
+	if id > len(box_clients)-1 || id < 0 {
+		return fiber.ErrServiceUnavailable
 	}
-	return nil
+	return c.Send(frame_data[id])
 }
 
-func get_box(c *fiber.Ctx, clientType string) error {
-	switch clientType {
-	case "tim":
-		return c.JSON(box_tim_data)
-	case "jason":
-		return c.JSON(box_data)
-	default:
-		log.Fatalf("Invalid client type: %s", clientType)
+func get_box(c *fiber.Ctx) error {
+	id := c.QueryInt("stream_source", -1)
+	if id > len(box_clients)-1 || id < 0 {
+		return fiber.ErrServiceUnavailable
 	}
-	return nil
+	return c.JSON(box_data[id])
 }
-
-// func get_tim_box(c *fiber.Ctx) error {
-// 	return c.JSON(box_tim_data)
-// }
 
 func start_server() {
 	if err := app.Listen(fmt.Sprintf(":%d", config.web.port)); err != nil {
@@ -387,7 +227,7 @@ func login(c *fiber.Ctx) error {
 		"email":    user.Email,
 		"password": user.Password,
 	})
-	user_found := len(result.([]interface{})) == 1
+	user_found := len(result.([]interface{})[0].(map[string]interface{})["result"].([]interface{})) == 1
 	if err != nil {
 		return c.SendString(fmt.Sprintf("Error: %v", err))
 	}
@@ -397,13 +237,15 @@ func login(c *fiber.Ctx) error {
 	return c.Redirect("/?error=true")
 }
 
+func logout(c *fiber.Ctx) error {
+	return c.Redirect("/")
+}
+
 func main() {
 	config = loadConfig()
 	setup_db()
-	//tim_client
-	setup_clients(config.cam.tim_url, config.server.tim_url, "tim")
-	//client
-	setup_clients(config.cam.url, config.server.url, "jason")
+	setup_client_pair(config.cam.tim_url, config.server.tim_url)
+	setup_client_pair(config.cam.url, config.server.url)
 	defer frame_conn.Close()
 	defer box_conn.Close()
 
@@ -424,44 +266,27 @@ func main() {
 
 	app.Post("/login", login)
 	app.Get("/", index)
+	app.Get("/logout", logout)
 	app.Get("/stream", get_stream)
 	app.Get("/records", get_records)
 	app.Get("/records_api", get_records_api)
-
-	// app.Get("/tim_image", get_tim_image)
-	// app.Get("/tim_box", get_tim_box)
-
-	app.Get("/tim_image", func(c *fiber.Ctx) error {
-		return get_image(c, "tim")
-	})
-	app.Get("/tim_box", func(c *fiber.Ctx) error {
-		return get_box(c, "tim")
-	})
-
-	app.Get("/image", func(c *fiber.Ctx) error {
-		return get_image(c, "jason")
-	})
-	app.Get("/box", func(c *fiber.Ctx) error {
-		return get_box(c, "jason")
-	})
+	app.Get("/image", get_image)
+	app.Get("/box", get_box)
 
 	// Start the Fiber server
 	go start_server()
 
 	var wg sync.WaitGroup
-	wg.Add(2)
-
-	// Goroutines to fetch data
-
-	// go get_image_data(&wg, "tim")
-	// go get_box_data(&wg, "tim")
-
-	// go get_image_data(&wg, "tim", frame_tim_client, image_tim_stream, &frame_tim_data)
-	// go get_box_data(&wg, "tim", box_tim_client, box_tim_stream, &box_tim_data)
-
-	go get_image_data(&wg, "jason", frame_client, image_stream, &frame_data)
-	go get_box_data(&wg, "jason", box_client, box_stream, &box_data)
-
+	wg.Add(2 * len(box_clients))
+	//haha hehehe
+	//唔知道點改吧
+	//hahahahhahahahahha
+	frame_data = make([][]byte, len(frame_clients))
+	box_data = make([][]Box, len(box_clients))
+	for i := 0; i < len(box_clients); i++ {
+		go get_image_data(&wg, i)
+		go get_box_data(&wg, i)
+	}
 	wg.Wait()
 }
 

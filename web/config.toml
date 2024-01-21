@@ -7,12 +7,12 @@ url = "localhost:8788"
 port = 8788
 
 [tim_cam]
-url = "localhost:8878"
-port = 8878
+url = "localhost:8877"
+port = 8877
 
 [tim_server]
-url = "localhost:8788"
-port = 8788
+url = "localhost:8787"
+port = 8787
 
 [web]
 url = "05wbdt0x-8007.asse.devtunnels.ms"
