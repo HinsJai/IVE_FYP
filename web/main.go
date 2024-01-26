@@ -8,9 +8,11 @@ import (
 	pb "ive_fyp/protos"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/session"
 	"github.com/gofiber/template/html/v2"
 	"github.com/pelletier/go-toml"
 	"github.com/surrealdb/surrealdb.go"
@@ -74,12 +76,15 @@ var (
 	box_data      [][]Box
 	db            *surrealdb.DB
 	config        WebConfig
+	store         *session.Store
+	sess          *session.Session
 	box_conn      *grpc.ClientConn
 	frame_conn    *grpc.ClientConn
 	app           *fiber.App
 )
 
 func setup_db() {
+
 	var err error
 	db, err = surrealdb.New(config.database.url)
 	if err != nil {
@@ -115,7 +120,6 @@ func setup_client_pair(cam_url string, server_url string) {
 func get_image_data(wg *sync.WaitGroup, id int) {
 	defer wg.Done()
 	var err error
-	//error index out of range
 	image_stream[id], err = frame_clients[id].GetImage(context.Background(), &pb.Empty{}, grpc.MaxCallRecvMsgSize(1024*1024*1024))
 	if err != nil {
 		log.Fatalf("could not call GetImage: %v", err)
@@ -129,13 +133,14 @@ func get_image_data(wg *sync.WaitGroup, id int) {
 			log.Fatalf("error receiving from GetImage stream: %v", err)
 		}
 		decoded_data, _ := base64.StdEncoding.DecodeString(string(image.Data[:]))
+		// encoded_data:= base64.StdEncoding.EncodeToString([]byte(image.Data[:]))
 		frame_data[id] = decoded_data
+		// frame_data[id] = encoded_data
 	}
 }
 
 func get_box_data(wg *sync.WaitGroup, id int) {
 	defer wg.Done()
-	//error index out of range
 	box_stream[id], _ = box_clients[id].Analysis(context.Background(), &pb.Empty{}, grpc.MaxCallRecvMsgSize(1024*1024*1024))
 	for {
 		response, err := box_stream[id].Recv()
@@ -161,25 +166,80 @@ func get_box_data(wg *sync.WaitGroup, id int) {
 }
 
 func index(c *fiber.Ctx) error {
-	err := ""
+	var err error
+	unauthorized_message := ""
 	if c.QueryBool("error") {
-		err = "Invalid email or password"
+		unauthorized_message = "Invalid email or password"
+	}
+	if c.QueryBool("unauth") {
+		unauthorized_message = "You must login first!!!"
 	}
 
+	sess, err = store.Get(c)
+	if err != nil {
+		panic(err)
+	}
+
+	email := sess.Get("email")
+	isLogin := email != nil
+
 	return c.Render("index", fiber.Map{
-		"request": c,
-		"error":   err,
+		"request":             c,
+		"isLogin":             isLogin,
+		"unauthorizedMessage": unauthorized_message,
 	})
 }
 
+func login(c *fiber.Ctx) error {
+	user := User{}
+	var err error
+	if err = c.BodyParser(&user); err != nil {
+		return err
+	}
+	result, err := db.Query("SELECT 1 FROM user where email = $email and password = $password;", map[string]string{
+		"email":    user.Email,
+		"password": user.Password,
+	})
+	user_found := len(result.([]interface{})[0].(map[string]interface{})["result"].([]interface{})) == 1
+	if err != nil {
+		panic(err)
+	}
+	if user_found {
+
+		sess, err = store.Get(c)
+		if err != nil {
+			panic(err)
+		}
+
+		sess.Set("email", user.Email)
+
+		if err = sess.Save(); err != nil {
+			panic(err)
+		}
+
+		return c.Redirect("/stream")
+	}
+	return c.Redirect("/?error=true")
+}
+
 func get_records(c *fiber.Ctx) error {
+	var err error
+	sess, err = store.Get(c)
+	if err != nil {
+		panic(err)
+	}
+	if sess.Get("email") == nil {
+		return c.Redirect("/?unauth=true")
+	}
+
 	return c.Render("records", fiber.Map{
 		"request": c,
-		"url":     fmt.Sprintf("https://%s", config.web.url),
+		"url":     fmt.Sprintf("http://%s", config.web.url),
 	})
 }
 
 func get_records_api(c *fiber.Ctx) error {
+
 	result, err := db.Query("SELECT * FROM violation_record;", map[string]string{})
 	if err != nil {
 		return c.SendString(fmt.Sprintf("Error: %v", err))
@@ -188,15 +248,24 @@ func get_records_api(c *fiber.Ctx) error {
 }
 
 func get_stream(c *fiber.Ctx) error {
+	var err error
+	sess, err = store.Get(c)
+	if err != nil {
+		panic(err)
+	}
+
+	if sess.Get("email") == nil {
+		return c.Redirect("/?unauth=true")
+	}
 	return c.Render("stream", fiber.Map{
 		"request": c,
-		"url":     fmt.Sprintf("https://%s", config.web.url),
-		"url2":    fmt.Sprintf("https://%s", config.cam.tim_url),
+		"url":     fmt.Sprintf("http://%s", config.web.url),
 	})
 }
 
 func get_image(c *fiber.Ctx) error {
 	c.Set("Content-Type", "image/jpeg")
+	// c.Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	id := c.QueryInt("stream_source", -1)
 	if id > len(box_clients)-1 || id < 0 {
 		return fiber.ErrServiceUnavailable
@@ -206,6 +275,7 @@ func get_image(c *fiber.Ctx) error {
 
 func get_box(c *fiber.Ctx) error {
 	id := c.QueryInt("stream_source", -1)
+	// c.Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	if id > len(box_clients)-1 || id < 0 {
 		return fiber.ErrServiceUnavailable
 	}
@@ -218,38 +288,39 @@ func start_server() {
 	}
 }
 
-func login(c *fiber.Ctx) error {
-	user := User{}
-	if err := c.BodyParser(&user); err != nil {
-		return err
-	}
-	result, err := db.Query("SELECT 1 FROM user where email = $email and password = $password;", map[string]string{
-		"email":    user.Email,
-		"password": user.Password,
-	})
-	user_found := len(result.([]interface{})[0].(map[string]interface{})["result"].([]interface{})) == 1
-	if err != nil {
-		return c.SendString(fmt.Sprintf("Error: %v", err))
-	}
-	if user_found {
-		return c.Redirect("/stream")
-	}
-	return c.Redirect("/?error=true")
-}
-
 func logout(c *fiber.Ctx) error {
+	var err error
+	sess, err = store.Get(c)
+	if err != nil {
+		panic(err)
+	}
+
+	sess.Delete("email")
+	// Destry session
+	if err = sess.Destroy(); err != nil {
+		panic(err)
+	}
+
 	return c.Redirect("/")
 }
 
 func main() {
 	config = loadConfig()
 	setup_db()
-	setup_client_pair(config.cam.tim_url, config.server.tim_url)
 	setup_client_pair(config.cam.url, config.server.url)
+	// setup_client_pair(config.cam.tim_url, config.server.tim_url)
 	defer frame_conn.Close()
 	defer box_conn.Close()
 
+	store = session.New(session.Config{
+		Expiration: 60 * time.Second,
+	})
 	engine := html.New("./views", ".html")
+	engine.Reload(true)
+	// engine.Debug(true)
+	engine.Layout("embed")
+	engine.Delims("{{", "}}")
+
 	app = fiber.New(fiber.Config{
 		Views: engine,
 	})
@@ -261,6 +332,7 @@ func main() {
 	}))
 
 	app.Static("/images", "./images")
+	app.Static("/navigation", "./navigation")
 	app.Static("/js", "./js")
 	app.Static("/css", "./css")
 
@@ -278,11 +350,10 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(2 * len(box_clients))
-	//haha hehehe
-	//唔知道點改吧
-	//hahahahhahahahahha
 	frame_data = make([][]byte, len(frame_clients))
 	box_data = make([][]Box, len(box_clients))
+	image_stream = make([]pb.Analysis_GetImageClient, len(frame_clients))
+	box_stream = make([]pb.Analysis_AnalysisClient, len(box_clients))
 	for i := 0; i < len(box_clients); i++ {
 		go get_image_data(&wg, i)
 		go get_box_data(&wg, i)
@@ -293,7 +364,10 @@ func main() {
 // get the toml config
 func loadConfig() WebConfig {
 
-	toml_data, _ := toml.LoadFile("config.toml")
+	toml_data, err := toml.LoadFile("config.toml")
+	if err != nil {
+		log.Fatalf("Error loading config file, %s", err)
+	}
 	web_info := WebInfo{
 		url:  toml_data.Get("web").(*toml.Tree).Get("url").(string),
 		port: toml_data.Get("web").(*toml.Tree).Get("port").(int64),

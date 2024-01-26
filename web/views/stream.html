@@ -8,37 +8,18 @@
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://cdn.tailwindcss.com/3.4.1"></script>
     <script src="https://kit.fontawesome.com/c30932d00b.js" crossorigin="anonymous"></script>
+    <script src="../js/jquery-3.7.1.min.js"></script>
+    <script src="../js/function.js"></script>
+
 </head>
 
 <body class="flex h-screen gap-2 bg-black">
-    <div class="basis-56">
-        <div style="height: 90%;">
-            <div class="flex justify-start p-6 mb-5 gap-2">
-                <img src="../images/logo2.png" class="w-12">
-                <span class="text-4xl font-bold text-[#FFBE00]">COS</span>
-            </div>
-            <a href="#" class="flex text-slate-50 gap-5 text-xl p-6 hover:text-[#FFBE00]">
-                <i class="fa-solid fa-table-columns pt-1"></i>
-                <span class="uppercase">dashboard</span>
-            </a>
-            <a href="#" class="flex text-slate-50 gap-5 text-xl p-6 hover:text-[#FFBE00]">
-                <i class="fa-brands fa-watchman-monitoring pt-1"></i>
-                <span class="uppercase">surveillance</span>
-            </a>
-            <a href="#" class="flex text-slate-50 gap-5 text-xl p-6 hover:text-[#FFBE00]">
-                <i class="fa-solid fa-microchip pt-1"></i>
-                <span class="uppercase">hardware</span>
-            </a>
-            <a href="/records" class="flex text-slate-50 gap-6 text-xl p-6 hover:text-[#FFBE00]">
-                <i class="fa-solid fa-file pt-1"></i>
-                <span class="uppercase">log history</span>
-            </a>
-        </div>
-        <div style="height: 10%;" class="flex justify-center items-center">
-            <button class="text-slate-50 uppercase text-xl hover:text-rose-900" onclick="logout()"><i
-                    class="fa-solid fa-right-from-bracket pr-5"></i>log out</button>
-        </div>
-    </div>
+    <div id="navigation" class="basis-56 bg-black"></div>
+    <script>
+        $(document).ready(function () {
+            $("#navigation").load('../navigation/side_bar.html')
+        })
+    </script>
     <div class="flex-1">
         <div style="height: 10%;" class="bg-[#222222] text-slate-50 flex items-center pl-6">
             <span class="text-xl mr-5">Default </span>
@@ -50,14 +31,16 @@
                 <canvas id="canvas" class="bg-slate-500 w-full h-full"></canvas>
             </div>
             <div class="overflow-hidden">
-                <img id="image2" src="{{.url2}}" class="bg-no-repeat bg-center w-full h-full">
-                <canvas id="canvas" class="bg-slate-500 w-full h-full"></canvas>
+                <img id="image2" src="{{.url}}" alt="cam-02" width="640" height="480" hidden>
+                <canvas id="canvas2" class="bg-slate-500 w-full h-full"></canvas>
             </div>
             <div class="overflow-hidden">
-                <img id="image3" src="{{.url}}" class="bg-no-repeat bg-center w-full h-full">
+                <img id="image3" src="{{.url}}" alt="cam-03" width="640" height="480" hidden>
+                <!-- <canvas id="canvas3" class="bg-slate-500 w-full h-full"></canvas> -->
             </div>
             <div class="overflow-hidden">
-                <img id="image4" src="{{.url}}" class="bg-no-repeat bg-center w-full h-full">
+                <img id="image4" src="{{.url}}" alt="cam-04" width="640" height="480" hidden>
+                <!-- <canvas id="canvas4" class="bg-slate-500 w-full h-full"></canvas> -->
             </div>
         </div>
         <div style="height: 10%;" class="bg-[#222222]">
@@ -96,17 +79,37 @@
 <script>
     //store 4 cams box
     boxes = [[], [], [], []]
+    images = [[], [], [], []]
+
+    let canvas_array = [
+        document.getElementById("canvas"),
+        // document.getElementById("canvas2"),
+        //document.getElementById("canvas3"),
+        //document.getElementById("canvas4"),
+    ]
+
+    let scale = window.devicePixelRatio
 
     async function update_image_box(box_id, stream_source) {
         const image = document.getElementById(box_id);
-        const url = image.src;
+        url = image.src;
+        get_images(stream_source, url);
+        get_boxes(stream_source, url);
         update_image(stream_source, url);
-        setInterval(get_boxes, 100, stream_source, url);
     }
 
     async function update_image(stream_source, url) {
+        let arrayBuffer = images[stream_source];
+        let urlObject = URL.createObjectURL(new Blob([arrayBuffer]));
+
         let image = new Image()
-        image.src = `${url}image?v=${new Date().getTime()}&stream_source=${stream_source}`;
+
+        image.src = urlObject
+
+        let canvas = canvas_array[stream_source]
+
+        let ctx = canvas.getContext('2d')
+
         image.addEventListener("load", function () {
             ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
             let box = boxes[stream_source]
@@ -127,9 +130,32 @@
                 ctx.stroke();
             }
             setTimeout(update_image, 50, stream_source, url)
+            URL.revokeObjectURL(urlObject);
         });
+        image.addEventListener('error', function () {
+            setTimeout(update_image, 50, stream_source, url)
+        })
     }
 
+    async function get_images(stream_source, url) {
+        fetch(`${url}image?stream_source=${stream_source}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.arrayBuffer()
+            })
+            .then(arrayBuffer => {
+                images[stream_source] = arrayBuffer;
+            })
+            .catch(e => {
+                console.log('There has been a problem with your fetch operation: ' + e.message);
+            }).finally(
+                e => {
+                    setTimeout(get_images, 50, stream_source, url);
+                }
+            )
+    }
     async function get_boxes(stream_source, url) {
         fetch(`${url}box?stream_source=${stream_source}`)
             .then(response => {
@@ -143,19 +169,26 @@
             })
             .catch(e => {
                 console.log('There has been a problem with your fetch operation: ' + e.message);
-            });
+            }).finally(
+                e => {
+                    setTimeout(get_boxes, 50, stream_source, url);
+                }
+            )
     }
 
-    function resize() {
-        const canvas_width = 1003.97 / (2552 - 224 - 288) * (innerWidth - 224 - 288)
-        const canvas_height = 279.2 / 708 * innerHeight
-        canvas.style.width = canvas_width + "px"
-        canvas.style.height = canvas_height + "px"
-        canvas.width = canvas_width * scale;
-        canvas.height = canvas_height * scale;
-        if (firstTimeResize) {
-            ctx.scale(scale, scale);
-            firstTimeResize = false;
+    function create_resize_function(canvas) {
+        return function () {
+            const canvas_width = 1003.97 / (2552 - 224 - 288) * (innerWidth - 224 - 288)
+            const canvas_height = 279.2 / 708 * innerHeight
+            canvas.style.width = canvas_width + "px"
+            canvas.style.height = canvas_height + "px"
+            canvas.width = canvas_width * scale;
+            canvas.height = canvas_height * scale;
+            let ctx = canvas.getContext('2d')
+            if (canvas.firstTimeResize) {
+                ctx.scale(scale, scale);
+                canvas.firstTimeResize = false;
+            }
         }
     }
 
@@ -191,23 +224,32 @@
         return classEnum[class_type];
     }
 
-    function logout() {
-        window.location.href = '/'
-    }
 </script>
 
 <script>
-    const canvas_width = 1003.97 / (2552 - 224 - 288) * (innerWidth - 224 - 288)
-    const canvas_height = 279.2 / 708 * innerHeight
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-    var scale = window.devicePixelRatio;
-    var firstTimeResize = true
-    window.onresize = resize
-    resize()
-    for (let i = 0; i < 4; ++i) {
-        update_image_box(`image${i + 1}`, i)
+    // const canvas = document.getElementById("canvas"), canvas2 = document.getElementById("canvas2")
+    function load_canvas(canvas) {
+        const canvas_width = 1003.97 / (2552 - 224 - 288) * (innerWidth - 224 - 288)
+        const canvas_height = 279.2 / 708 * innerHeight
+        //const ctx = canvas.getContext("2d"), ctx2 = canvas2.getContext("2d");
+        var scale = window.devicePixelRatio;
+        canvas.firstTimeResize = true
+
+        let resize_fn = create_resize_function(canvas)
+
+        resize_fn()
+
+        window.addEventListener('resize', resize_fn)
     }
+    window.addEventListener('load', () => {
+        for (let canvas of canvas_array) {
+            load_canvas(canvas)
+        }
+        for (let i = 0; i < canvas_array.length; ++i) {
+            update_image_box(`image${i + 1}`, i)
+            //update_image_box(`image${i + 1}`, 0)
+        }
+    })
 </script>
 
 </html>

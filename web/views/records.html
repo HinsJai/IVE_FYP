@@ -5,12 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Violation Record</title>
-    <link rel="stylesheet" href="../css/dataTables.css" />
-    <script src="../js/jquery-3.7.1.slim.min.js"></script>
-    <script src="../js/dataTables.js"></script>
-    <script src="../js/moment.min.js"></script>
-    <script src="../js/moment-timezone-with-data-10-year-range.min.js"></script>
-
+    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css"> -->
+    <link rel="stylesheet" href="../css/jquery.dataTables-1.13.7.min.css">
+    <script src="../js/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.js"></script>
+    <script src="https://momentjs.com/downloads/moment.min.js"></script>
+    <script src="https://momentjs.com/downloads/moment-timezone-with-data-10-year-range.min.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+    <script src="https://kit.fontawesome.com/c30932d00b.js" crossorigin="anonymous"></script>
+    <script src="../js/function.js"></script>
 </head>
 
 <script>
@@ -44,15 +47,21 @@
 </script>
 </head>
 
-<body>
-    <div id="records">
-        <table id="myTable">
-            <thead>
+<body class="flex h-screen">
+    <div id="side-bar" class="basis-56 bg-black"></div>
+    <script>
+        $(document).ready(function () {
+            $("#side-bar").load('../navigation/side_bar.html')
+        })
+    </script>
+    <div id="records" class="flex-1 p-20">
+        <table id="myTable" class="w-full display">
+            <thead class="bg-black mt-4">
                 <tr>
-                    <th>Camera ID</th>
-                    <th>Violation Type</th>
-                    <th>Work Place</th>
-                    <th>Time</th>
+                    <th class="p-3 text-base font-semibold tracking-wide text-white">Camera ID</th>
+                    <th class="p-3 text-base font-semibold tracking-wide text-white">Violation Type</th>
+                    <th class="p-3 text-base font-semibold tracking-wide text-white">Work Place</th>
+                    <th class="p-3 text-base font-semibold tracking-wide text-white">Time</th>
                 </tr>
             </thead>
         </table>

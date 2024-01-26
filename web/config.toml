@@ -15,7 +15,8 @@ url = "localhost:8787"
 port = 8787
 
 [web]
-url = "05wbdt0x-8007.asse.devtunnels.ms"
+# url = "05wbdt0x-8007.asse.devtunnels.ms"
+url = "localhost:8007"
 index = "index"
 port = 8007
 
