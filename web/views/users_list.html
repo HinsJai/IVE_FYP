@@ -4,11 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Violation Record</title>
-    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css"> -->
+    <title>Users List</title>
     <link rel="stylesheet" href="../css/jquery.dataTables-1.13.7.min.css">
     <script src="../js/jquery-3.7.1.min.js"></script>
-    <!-- <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.js"></script> -->
     <script src="../js/dataTables.js"></script>
     <script src="../js/moment.min.js"></script>
     <script src="../js/moment-timezone-with-data-10-year-range.min.js"></script>
@@ -20,24 +18,24 @@
 <script>
     const url = "{{.url}}";
     window.onload = function () {
-        fetch(`${url}/records_api`)
+        fetch(`${url}/users_list_api`)
             .then(response => response.json())
             .then(data => {
                 $('#myTable').DataTable({
                     data: data[0].result,
                     columns: [
-                        { data: 'cameraID' },
                         {
-                            data: 'violation_type', render: function (data, type, row) {
-                                return data.join(", ");
-                            }
+                            data: null,
+                            render: function (data, type, row) {
+                                return row.firstName + ' ' + row.lastName;
+                            },
                         },
-                        { data: 'workplace' },
-                        {
-                            data: 'time', render: function (data, type, row) {
-                                return moment(data).tz("Africa/Abidjan").format("MMM DD/MM/YYYY HH:mm:ss");
-                            }
-                        }
+                        { data: 'gender' },
+                        { data: 'email' },
+                        { data: 'contact' },
+                        { data: 'position' },
+                        { data: 'emergencyContact' },
+                        { data: 'emergencyPersonRelation' },
                     ]
                 });
             })
@@ -46,7 +44,6 @@
             });
     };
 </script>
-</head>
 
 <body class="flex h-screen">
     <div id="side-bar" class="basis-56 bg-black"></div>
@@ -59,10 +56,14 @@
         <table id="myTable" class="w-full display">
             <thead class="bg-black mt-4">
                 <tr>
-                    <th class="p-3 text-base font-semibold tracking-wide text-white">Camera ID</th>
-                    <th class="p-3 text-base font-semibold tracking-wide text-white">Violation Type</th>
-                    <th class="p-3 text-base font-semibold tracking-wide text-white">Work Place</th>
-                    <th class="p-3 text-base font-semibold tracking-wide text-white">Time</th>
+                    <th class="p-3 text-base font-semibold tracking-wide text-white">Full Name</th>
+                    <!-- <th class="p-3 text-base font-semibold tracking-wide text-white">LastName</th> -->
+                    <th class="p-3 text-base font-semibold tracking-wide text-white">Gender</th>
+                    <th class="p-3 text-base font-semibold tracking-wide text-white">Email</th>
+                    <th class="p-3 text-base font-semibold tracking-wide text-white">Contact</th>
+                    <th class="p-3 text-base font-semibold tracking-wide text-white">Position</th>
+                    <th class="p-3 text-base font-semibold tracking-wide text-white">Emergency Contact</th>
+                    <th class="p-3 text-base font-semibold tracking-wide text-white">Emergency Person Relation</th>
                 </tr>
             </thead>
         </table>

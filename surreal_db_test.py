@@ -43,12 +43,20 @@ async def main():
     #     },
     # )
     # print(await db.get_db_response("select * from user"))
+    # print(
+    #     await db.get_db_response(
+    #         "select 1 from user where email=$email and password=$password",
+    #         data={"email": "jason199794@gmail.com", "password": "Aa123456"},
+    #     )
+    # )
     print(
         await db.get_db_response(
-            "select 1 from user where email=$email and password=$password",
-            data={"email": "jason199794@gmail.com", "password": "Aa123456"},
+            "RETURN crypto::argon2::generate($password);",
+            data={"password": "Aa123456"},
         )
     )
+    
+  
 
     # await db.query("""
     # insert into person {

@@ -5,19 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FYP</title>
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
-    <script src="https://kit.fontawesome.com/c30932d00b.js" crossorigin="anonymous"></script>
     <script src="../js/jquery-3.7.1.min.js"></script>
+    <script src="../js/tailwindcss-3.4.1.js"></script>
+    <script src="../js/fontawesome-c30932d00b.js" crossorigin="anonymous"></script>
     <script src="../js/function.js"></script>
-
 </head>
 
 <body class="flex h-screen gap-2 bg-black">
-    <div id="navigation" class="basis-56 bg-black"></div>
+    <div id="side-bar" class="basis-56 bg-black"></div>
     <script>
         $(document).ready(function () {
-            $("#navigation").load('../navigation/side_bar.html')
+            $("#side-bar").load('../navigation/side_bar.html');
         })
     </script>
     <div class="flex-1">
@@ -251,5 +249,6 @@
         }
     })
 </script>
+
 
 </html>

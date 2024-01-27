@@ -1,4 +1,9 @@
-devtunnel host -p 8080 8572 --allow-anonymous
+devtunnel host --allow-anonymous
+
+
+# 1. devtunnel create -p 8080 8572 --protocol http
+
+# 2. devtunnel host --allow-anonymous
 
 # also share web port 8007 in vscode devtunnel
 
