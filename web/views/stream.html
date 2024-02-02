@@ -274,6 +274,8 @@
     socket.onmessage = function (event) {
         const data = JSON.parse(event.data)
         console.log("Message from server ", data);
+
+        //camID , workplace, classType
     };
 
     socket.onerror = function (error) {

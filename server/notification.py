@@ -5,15 +5,16 @@ import tomllib
 sys.path.extend([".."])
 
 import asyncio
+from collections import deque
 from concurrent import futures
 from dataclasses import dataclass, field
-
 from threading import Thread
 from typing import Any, Self
 
 import grpc
 import websockets
 from google.protobuf.json_format import MessageToJson
+
 from logger import Logger, get_logger
 
 try:
@@ -24,8 +25,7 @@ except ImportError:
 from protos.proto_pb2 import Class, Empty
 from protos.proto_pb2_grpc import (
     Violation_NotificationServicer,
-    add_Violation_NotificationServicer_to_server,
-)
+    add_Violation_NotificationServicer_to_server)
 
 with open("config.toml", "rb") as config:
     config = tomllib.load(config)
@@ -73,16 +73,16 @@ class NotificationServer:
             self.__server.wait_for_termination()
 
 
-history = []
-
-
 class WebSocketNotificationServer:
-    def __init__(self, host, port) -> None:
+    def __init__(self, host:str, port:int, with_history: bool = False) -> None:
         self.host = host
         self.port = port
         self.clients = set()
         self.logger = get_logger("Notification WebSocket Server")
         self.loop = asyncio.get_event_loop()
+        self.history = (
+            deque(maxlen=10) if with_history else None
+        )  # if with_history is True, store last 10 messages and send to browswer
 
     async def register(self, websocket):
         self.clients.add(websocket)
@@ -93,17 +93,20 @@ class WebSocketNotificationServer:
         self.logger.info(f"Client {websocket.remote_address} disconnected")
 
     async def send_to_all(self, message) -> None:
-        if len(self.clients) > 0:
-            tasks = [
-                asyncio.create_task(client.send(message)) for client in self.clients
-            ]
-            await asyncio.wait(tasks)
-            self.logger.info("Published message to all clients")
+        if self.history is not None:
+            self.history.append(message)
+        if len(self.clients) == 0:
+            return
+        async with asyncio.TaskGroup() as tg:
+            for client in self.clients:
+                tg.create_task(client.send(message))
+        self.logger.info("Published message to all clients")
 
-    async def handler(self, websocket, path) -> None:
+    async def handler(self, websocket, _) -> None:
         await self.register(websocket)
-        for request in history:
-            await websocket.send(MessageToJson(request))
+        if self.history is not None:
+            for message in self.history:
+                await websocket.send(message)
         try:
             async for message in websocket:
                 self.logger.info(f"Received message: {message}")
@@ -121,15 +124,9 @@ class NotificationService(Violation_NotificationServicer):
         self.__server.log_to_console(
             f"{context.peer()} connected with inference server"
         )
-        history.append(request)
-
         asyncio.run_coroutine_threadsafe(
             ws_server.send_to_all(MessageToJson(request)), ws_server.loop
         )
-
-        if len(history) > 10:
-            del history[0]
-
         return Empty()
 
 
@@ -138,7 +135,7 @@ def start_websocket_server():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     ws_server = server = WebSocketNotificationServer(
-        WEBSOCKET_NOTIFICATION_URL, WEBSOCKET_NOTIFICATION_PORT
+        WEBSOCKET_NOTIFICATION_URL, WEBSOCKET_NOTIFICATION_PORT,with_history=True
     )
     start_server = websockets.serve(server.handler, server.host, server.port)
     loop.run_until_complete(start_server)
@@ -146,9 +143,9 @@ def start_websocket_server():
 
 
 if __name__ == "__main__":
-    abc = Thread(
+    websocket = Thread(
         target=start_websocket_server, daemon=True, name="Notification Websocket Server"
     )
-    abc.start()
+    websocket.start()
     with NotificationServer() as server:
         server.start()
