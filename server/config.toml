@@ -14,9 +14,17 @@ url = "localhost"
 port = 8788
 
 [discord]
-ip= "127.0.0.1"
-port = 8572
+ip = "127.0.0.1"
+port = 8575
 token = "MTE4ODQyNTM0MDI1MTU1Mzg2Mw.Guojnj.J_FHmL2aSbdr1ZJPFMlNwNgryorIRZmboN2AYk"
 guild_id = 1136972746698522664
 log_channel = "log"
 interaction_user_id = 688711207087374365
+
+[grpc_notification]
+url = "127.0.0.1"
+port = 8573
+
+[websocket_notification]
+url = "127.0.0.1"
+port = 8574

@@ -99,6 +99,68 @@ class Analysis(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
 
+class Violation_NotificationStub(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.notification = channel.unary_unary(
+                '/Violation_Notification/notification',
+                request_serializer=proto__pb2.NotificationRequest.SerializeToString,
+                response_deserializer=proto__pb2.Empty.FromString,
+                )
+
+
+class Violation_NotificationServicer(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def notification(self, request, context):
+        """infer -> notf
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_Violation_NotificationServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'notification': grpc.unary_unary_rpc_method_handler(
+                    servicer.notification,
+                    request_deserializer=proto__pb2.NotificationRequest.FromString,
+                    response_serializer=proto__pb2.Empty.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'Violation_Notification', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+
+
+ # This class is part of an EXPERIMENTAL API.
+class Violation_Notification(object):
+    """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def notification(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Violation_Notification/notification',
+            proto__pb2.NotificationRequest.SerializeToString,
+            proto__pb2.Empty.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+
 class DiscordLogStub(object):
     """service TimAnalysis{
     rpc analysis(Empty) returns (stream TimResponse);
@@ -119,7 +181,7 @@ class DiscordLogStub(object):
         """
         self.log = channel.unary_unary(
                 '/DiscordLog/log',
-                request_serializer=proto__pb2.LogResponse.SerializeToString,
+                request_serializer=proto__pb2.LogRequest.SerializeToString,
                 response_deserializer=proto__pb2.Empty.FromString,
                 )
 
@@ -147,7 +209,7 @@ def add_DiscordLogServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'log': grpc.unary_unary_rpc_method_handler(
                     servicer.log,
-                    request_deserializer=proto__pb2.LogResponse.FromString,
+                    request_deserializer=proto__pb2.LogRequest.FromString,
                     response_serializer=proto__pb2.Empty.SerializeToString,
             ),
     }
@@ -181,7 +243,7 @@ class DiscordLog(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/DiscordLog/log',
-            proto__pb2.LogResponse.SerializeToString,
+            proto__pb2.LogRequest.SerializeToString,
             proto__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

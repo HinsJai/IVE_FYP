@@ -22,8 +22,10 @@ sys.path.extend([".."])
 
 from item_getter import FrameGetter
 from logger import get_logger
-from protos.proto_pb2 import Class, Image, LogResponse, Response
+from protos.proto_pb2 import (Class, Image, LogRequest, NotificationRequest,
+                              Response)
 from protos.proto_pb2_grpc import (AnalysisServicer, DiscordLogStub,
+                                   Violation_NotificationStub,
                                    add_AnalysisServicer_to_server)
 
 with open("config.toml", "rb") as config:
@@ -40,6 +42,8 @@ SERVER_URL = config["server"]["url"]
 SERVER_PORT = config["server"]["port"]
 DISCORD_LOGGER_URL = config["discord"]["ip"]
 DISCORD_LOGGER_PORT = config["discord"]["port"]
+GRPC_NOTIFICATION_PORT = config["grpc_notification"]["port"]
+GRPC_NOTIFICATION_URL = config["grpc_notification"]["url"]
 
 del config
 
@@ -54,11 +58,19 @@ class AnalysisServer:
         self.__logger_channel = grpc.insecure_channel(
             f"{DISCORD_LOGGER_URL}:{DISCORD_LOGGER_PORT}"
         )
+        self.__notification_channel = grpc.insecure_channel(
+            f"{GRPC_NOTIFICATION_URL}:{GRPC_NOTIFICATION_PORT}"
+        )
+        self.__notification_stub = Violation_NotificationStub(
+            self.__notification_channel
+        )
         self.__logger_stub = DiscordLogStub(self.__logger_channel)
+        self.__notification_queue: Queue[tuple[str, list[str], str]] = Queue()
         self.__dc_queue: Queue[tuple[str, bytes]] = Queue()
         self.__db_queue: Queue[list[str]] = Queue()
         self.__dc_worker = threading.Thread(target=self.__dc_worker)
         self.__db_worker = threading.Thread(target=self.__db_worker)
+        self.__notificaiton_worker = threading.Thread(target=self.__notificaiton_worker)
 
     def __enter__(self) -> Self:
         add_AnalysisServicer_to_server(AnalysisService(self), self.__server)
@@ -71,6 +83,7 @@ class AnalysisServer:
     def __exit__(self, _, __, ___) -> None:
         self.__server.stop(None)
         self.__logger_channel.close()
+        self.__notification_channel.close()
 
     def start(self) -> None:
         self.log_to_console(f"Server started at {SERVER_URL}:{SERVER_PORT}")
@@ -78,6 +91,7 @@ class AnalysisServer:
         self.__frame_getter.start()
         self.__dc_worker.start()
         self.__db_worker.start()
+        self.__notificaiton_worker.start()
         with contextlib.suppress(KeyboardInterrupt):
             self.__server.wait_for_termination()
 
@@ -96,8 +110,17 @@ class AnalysisServer:
             response = await db.query(query, data)
         return response[0]["result"]
 
+    def __log_to_notification(
+        self, camID: str, violation_types: list[str], workplace: str
+    ) -> None:
+        self.__notification_stub.notification(
+            NotificationRequest(
+                camID=camID, class_type=violation_types, workplace=workplace
+            )
+        )
+
     def __log_to_discord(self, message: str, image: bytes) -> None:
-        self.__logger_stub.log(LogResponse(message=message, image=Image(data=image)))
+        self.__logger_stub.log(LogRequest(message=message, image=Image(data=image)))
 
     def __log_to_db(self, violation_types: list[str]) -> None:
         asyncio.run(
@@ -129,6 +152,12 @@ class AnalysisServer:
             self.__log_to_discord(message, image)
             self.__dc_queue.task_done()
 
+    def __notificaiton_worker(self) -> None:
+        while True:
+            camID, violation_types, workplace = self.__notification_queue.get()
+            self.__log_to_notification(camID, violation_types, workplace)
+            self.__notification_queue.task_done()
+
     # store the action of the worker in queue
     def __log(self):
         violation_types = [
@@ -142,6 +171,7 @@ class AnalysisServer:
             cv2.imencode(".png", self.frame)[1].tobytes(),
         )
         self.__dc_queue.put(dc_pair)
+        self.__notification_queue.put(("c001", violation_types, "TY-IVE"))
         self.__reset_counter()
 
     @property

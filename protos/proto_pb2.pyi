@@ -59,10 +59,20 @@ class Response(_message.Message):
     item: _containers.RepeatedCompositeFieldContainer[Item]
     def __init__(self, item: _Optional[_Iterable[_Union[Item, _Mapping]]] = ...) -> None: ...
 
-class LogResponse(_message.Message):
+class LogRequest(_message.Message):
     __slots__ = ["message", "image"]
     MESSAGE_FIELD_NUMBER: _ClassVar[int]
     IMAGE_FIELD_NUMBER: _ClassVar[int]
     message: str
     image: Image
     def __init__(self, message: _Optional[str] = ..., image: _Optional[_Union[Image, _Mapping]] = ...) -> None: ...
+
+class NotificationRequest(_message.Message):
+    __slots__ = ["camID", "class_type", "workplace"]
+    CAMID_FIELD_NUMBER: _ClassVar[int]
+    CLASS_TYPE_FIELD_NUMBER: _ClassVar[int]
+    WORKPLACE_FIELD_NUMBER: _ClassVar[int]
+    camID: str
+    class_type: _containers.RepeatedScalarFieldContainer[Class]
+    workplace: str
+    def __init__(self, camID: _Optional[str] = ..., class_type: _Optional[_Iterable[_Union[Class, str]]] = ..., workplace: _Optional[str] = ...) -> None: ...

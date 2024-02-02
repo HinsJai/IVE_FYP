@@ -1,3 +1,5 @@
 #V2
 SELECt * FROM violation_record
 DELETE violation_record
+
+count((SELECT * FROM violation_record  WHERE 'NO_MASK' IN violation_type and   time >= time::floor(time::now(),1d)));

@@ -194,11 +194,98 @@ var Analysis_ServiceDesc = grpc.ServiceDesc{
 	Metadata: "proto.proto",
 }
 
+// Violation_NotificationClient is the client API for Violation_Notification service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type Violation_NotificationClient interface {
+	Notification(ctx context.Context, in *NotificationRequest, opts ...grpc.CallOption) (*Empty, error)
+}
+
+type violation_NotificationClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewViolation_NotificationClient(cc grpc.ClientConnInterface) Violation_NotificationClient {
+	return &violation_NotificationClient{cc}
+}
+
+func (c *violation_NotificationClient) Notification(ctx context.Context, in *NotificationRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/Violation_Notification/notification", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Violation_NotificationServer is the server API for Violation_Notification service.
+// All implementations must embed UnimplementedViolation_NotificationServer
+// for forward compatibility
+type Violation_NotificationServer interface {
+	Notification(context.Context, *NotificationRequest) (*Empty, error)
+	mustEmbedUnimplementedViolation_NotificationServer()
+}
+
+// UnimplementedViolation_NotificationServer must be embedded to have forward compatible implementations.
+type UnimplementedViolation_NotificationServer struct {
+}
+
+func (UnimplementedViolation_NotificationServer) Notification(context.Context, *NotificationRequest) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Notification not implemented")
+}
+func (UnimplementedViolation_NotificationServer) mustEmbedUnimplementedViolation_NotificationServer() {
+}
+
+// UnsafeViolation_NotificationServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to Violation_NotificationServer will
+// result in compilation errors.
+type UnsafeViolation_NotificationServer interface {
+	mustEmbedUnimplementedViolation_NotificationServer()
+}
+
+func RegisterViolation_NotificationServer(s grpc.ServiceRegistrar, srv Violation_NotificationServer) {
+	s.RegisterService(&Violation_Notification_ServiceDesc, srv)
+}
+
+func _Violation_Notification_Notification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NotificationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(Violation_NotificationServer).Notification(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Violation_Notification/notification",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(Violation_NotificationServer).Notification(ctx, req.(*NotificationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// Violation_Notification_ServiceDesc is the grpc.ServiceDesc for Violation_Notification service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var Violation_Notification_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "Violation_Notification",
+	HandlerType: (*Violation_NotificationServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "notification",
+			Handler:    _Violation_Notification_Notification_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "proto.proto",
+}
+
 // DiscordLogClient is the client API for DiscordLog service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DiscordLogClient interface {
-	Log(ctx context.Context, in *LogResponse, opts ...grpc.CallOption) (*Empty, error)
+	Log(ctx context.Context, in *LogRequest, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type discordLogClient struct {
@@ -209,7 +296,7 @@ func NewDiscordLogClient(cc grpc.ClientConnInterface) DiscordLogClient {
 	return &discordLogClient{cc}
 }
 
-func (c *discordLogClient) Log(ctx context.Context, in *LogResponse, opts ...grpc.CallOption) (*Empty, error) {
+func (c *discordLogClient) Log(ctx context.Context, in *LogRequest, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/DiscordLog/log", in, out, opts...)
 	if err != nil {
@@ -222,7 +309,7 @@ func (c *discordLogClient) Log(ctx context.Context, in *LogResponse, opts ...grp
 // All implementations must embed UnimplementedDiscordLogServer
 // for forward compatibility
 type DiscordLogServer interface {
-	Log(context.Context, *LogResponse) (*Empty, error)
+	Log(context.Context, *LogRequest) (*Empty, error)
 	mustEmbedUnimplementedDiscordLogServer()
 }
 
@@ -230,7 +317,7 @@ type DiscordLogServer interface {
 type UnimplementedDiscordLogServer struct {
 }
 
-func (UnimplementedDiscordLogServer) Log(context.Context, *LogResponse) (*Empty, error) {
+func (UnimplementedDiscordLogServer) Log(context.Context, *LogRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Log not implemented")
 }
 func (UnimplementedDiscordLogServer) mustEmbedUnimplementedDiscordLogServer() {}
@@ -247,7 +334,7 @@ func RegisterDiscordLogServer(s grpc.ServiceRegistrar, srv DiscordLogServer) {
 }
 
 func _DiscordLog_Log_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LogResponse)
+	in := new(LogRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -259,7 +346,7 @@ func _DiscordLog_Log_Handler(srv interface{}, ctx context.Context, dec func(inte
 		FullMethod: "/DiscordLog/log",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DiscordLogServer).Log(ctx, req.(*LogResponse))
+		return srv.(DiscordLogServer).Log(ctx, req.(*LogRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

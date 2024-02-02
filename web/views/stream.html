@@ -4,6 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+        content="connect-src 'self' ws://localhost:8574/ {{.url}}/box {{.url}}/image https://ka-f.fontawesome.com;">
+
     <title>FYP</title>
     <script src="../js/jquery-3.7.1.min.js"></script>
     <script src="../js/tailwindcss-3.4.1.js"></script>
@@ -12,7 +15,7 @@
 </head>
 
 <body class="flex h-screen gap-2 bg-black">
-    <div id="side-bar" class="basis-56 bg-black"></div>
+    <div id="side-bar" class="basis-64 bg-black px-2"></div>
     <script>
         $(document).ready(function () {
             $("#side-bar").load('../navigation/side_bar.html');
@@ -46,16 +49,18 @@
         </div>
     </div>
     <div class="basis-72 px-3 py-7">
-        <div style="height: 7%;">
-            <label class="relative">
+        <div style="height: 7%;" class="relative text-center justify-center">
+            <p class="text-slate-50 text-2xl">Notification</p>
+            <!-- <label class="relative">
                 <input type="text" class="bg-[#222222] text-slate-50 outline-none pl-2 pr-8">
                 <i class="fa-solid fa-magnifying-glass text-slate-50 absolute right-2 top-1"></i>
             </label>
             <i
-                class="fa-solid fa-arrow-up-a-z text-slate-50 ml-1 hover:bg-[#FFBE00] px-1 py-1 rounded-md cursor-pointer"></i>
+                class="fa-solid fa-arrow-up-a-z text-slate-50 ml-1 hover:bg-[#FFBE00] px-1 py-1 rounded-md cursor-pointer"></i> -->
         </div>
-        <div style="height: 86%;">
-            <div class="overflow-hidden mb-2">
+        <div style="height: 36%;" class="border border-slate-50" id="notic-container">
+            <!-- <div style=" height: 86%;"> -->
+            <!-- <div class="overflow-hidden mb-2">
                 <img src="hin_gor_1.png" class="bg-no-repeat bg-center w-full h-full">
             </div>
             <div class="overflow-hidden mb-2">
@@ -69,7 +74,7 @@
         <div style="height: 6%;" class="flex justify-between items-center text-lg text-slate-600">
             <span class="text-slate-50">Control</span>
             <i
-                class="fa-solid fa-chevron-up text-slate-50 pt-1 hover:bg-[#FFBE00] px-1 py-1 rounded-md cursor-pointer"></i>
+                class="fa-solid fa-chevron-up text-slate-50 pt-1 hover:bg-[#FFBE00] px-1 py-1 rounded-md cursor-pointer"></i> -->
         </div>
     </div>
 </body>
@@ -127,7 +132,7 @@
                 ctx.rect(scaledX1, scaledY1, scaledWidth, scaledHeight);
                 ctx.stroke();
             }
-            setTimeout(update_image, 50, stream_source, url)
+            setTimeout(update_image, 0, stream_source, url)
             URL.revokeObjectURL(urlObject);
         });
         image.addEventListener('error', function () {
@@ -169,7 +174,7 @@
                 console.log('There has been a problem with your fetch operation: ' + e.message);
             }).finally(
                 e => {
-                    setTimeout(get_boxes, 50, stream_source, url);
+                    setTimeout(get_boxes, 0, stream_source, url);
                 }
             )
     }
@@ -248,6 +253,34 @@
             //update_image_box(`image${i + 1}`, 0)
         }
     })
+</script>
+
+<script>
+    const socket = new WebSocket('ws://localhost:8574');
+    socket.onopen = function (e) {
+        console.log("[open] Connection established");
+    };
+
+    socket.addEventListener("open", (event) => {
+        socket.send("Hello Server!");
+        console.log("Connected to server");
+    });
+
+    // socket.addEventListener("message", (event) => {
+    //     console.log("Message from server ", event);
+    //     console.log("Message from server ", event.data);
+    // });
+
+    socket.onmessage = function (event) {
+        const data = JSON.parse(event.data)
+        console.log("Message from server ", data);
+    };
+
+    socket.onerror = function (error) {
+        console.log(`[error] ${error}`);
+    };
+
+
 </script>
 
 

@@ -90,6 +90,13 @@ type NewUser struct {
 	Position                string `json:"position" xml:"position" form:"position"`
 }
 
+// type Notification struct {
+// 	CamID          string
+// 	Violation_List []string
+// 	Workplace      string
+// 	Time           string
+// }
+
 type ForgotPassword struct {
 	Email    string `json:"email" xml:"email" form:"email"`
 	OTP      int    `json:"otp" xml:"otp" form:"otp"`
@@ -274,6 +281,10 @@ func create_user(c *fiber.Ctx) error {
 	})
 }
 
+// func get_violated_notification(c *fiber.Ctx) error {
+
+// }
+
 func create_user_api(c *fiber.Ctx) error {
 	new_user := NewUser{}
 	var err error
@@ -380,7 +391,6 @@ func get_stream(c *fiber.Ctx) error {
 
 func get_image(c *fiber.Ctx) error {
 	c.Set("Content-Type", "image/jpeg")
-	// c.Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	id := c.QueryInt("stream_source", -1)
 	if id > len(box_clients)-1 || id < 0 {
 		return fiber.ErrServiceUnavailable
@@ -390,7 +400,6 @@ func get_image(c *fiber.Ctx) error {
 
 func get_box(c *fiber.Ctx) error {
 	id := c.QueryInt("stream_source", -1)
-	// c.Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	if id > len(box_clients)-1 || id < 0 {
 		return fiber.ErrServiceUnavailable
 	}
@@ -405,7 +414,7 @@ func logout(c *fiber.Ctx) error {
 	}
 
 	sess.Delete("email")
-	// Destry session
+	// Destroy session
 	if err = sess.Destroy(); err != nil {
 		panic(err)
 	}
@@ -560,6 +569,8 @@ func main() {
 	app.Post("/verify_email_api", verify_email_api)
 	app.Post("/verify_otp_api", verify_otp_api)
 	app.Post("/reset_password_api", rest_password_api)
+
+	// app.Get("/violated_notification", get_violated_notification)
 
 	// Start the Fiber server
 	go start_server()

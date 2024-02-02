@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="../js/jquery-3.7.1.min.js"></script>
+    <script src="../js/tailwindcss-3.4.1.js"></script>
+    <script src="../js/fontawesome-c30932d00b.js" crossorigin="anonymous"></script>
+    <script src="../js/function.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="flex h-screen gap-2 bg-black">
+    <div id="side-bar" class="basis-64 bg-black px-2"></div>
+    <script>
+        $(document).ready(function () {
+            $("#side-bar").load('../navigation/side_bar.html');
+        })
+    </script>
+    <div class="flex-1">
+        <div style="height: 10%;" class="flex items-center pl-6">
+            <p class="text-4xl text-slate-50">Dashboard</p>
+        </div>
+        <div style="height: 40%;" class="bg-white  grid grid-cols-2 grid-rows-2 gap-2 border border-slate-50">
+            <div class="chart-container" style="position: relative; height:40vh; width:80vw">
+                <canvas id="myChart" width="350" height="350" class="border border-slate-50"></canvas>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script>
+    const ctx = document.getElementById('myChart');
+
+    const image = new Image();
+    image.src = '../images/logo3.png';
+
+    const plugin = {
+        id: 'customCanvasBackgroundImage',
+        beforeDraw: (chart) => {
+            if (image.complete) {
+                const ctx = chart.ctx;
+                const { top, left, width, height } = chart.chartArea;
+                const x = left + width / 2 - image.width / 2;
+                const y = top + height / 2 - image.height / 2;
+                ctx.drawImage(image, x, y);
+            } else {
+                image.onload = () => chart.draw();
+            }
+        }
+    };
+    new Chart(ctx, {
+        type: 'doughnut',
+        plugins: [plugin],
+        data: {
+            labels: [
+                'No Safety Vest',
+                'No Mask',
+                'No Hardhat',
+            ], datasets: [{
+                label: 'Violation Record',
+                data: [300, 50, 100],
+                backgroundColor: [
+                    'rgb(255, 99, 132)',
+                    'rgb(54, 162, 235)',
+                    'rgb(255, 205, 86)'
+                ],
+                hoverOffset: 4
+            }]
+        }
+    });
+
+
+</script>
+
+</html>

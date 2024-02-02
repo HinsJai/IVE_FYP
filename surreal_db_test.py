@@ -19,7 +19,7 @@ class Database:
         async with Surreal(self.__url) as db:
             await db.signin({"user": self.__user, "pass": self.__pasword})
             await db.use(self.__namespace, self.__db)
-            response = await db.query(query, data)
+            response = await db.query(query)
             # print(response)
         return response[0]["result"]
 
@@ -51,12 +51,11 @@ async def main():
     # )
     print(
         await db.get_db_response(
-            "RETURN crypto::argon2::generate($password);",
-            data={"password": "Aa123456"},
+            # "RETURN crypto::argon2::generate($password);",
+            # data={"password": "Aa123456"},
+            "SELECT count() FROM violation_record WHERE $type IN violation_type",data={"type": 'NO_MASK'}
         )
     )
-    
-  
 
     # await db.query("""
     # insert into person {

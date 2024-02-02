@@ -9,6 +9,13 @@ service Analysis{
     rpc get_image(Empty) returns (stream Image);
 }
 
+service Violation_Notification{
+    rpc notification(NotificationRequest) returns (Empty); //infer -> notf
+    //notf tcp -> client
+    //client -> http get notf
+    // rpc get_notification(Empty) returns (stream NotificationRequest); //no need 
+}
+
 // service TimAnalysis{
 //     rpc analysis(Empty) returns (stream TimResponse);
 //     rpc get_image(Empty) returns (stream Image);
@@ -19,7 +26,7 @@ service Analysis{
 // }
 
 service DiscordLog {
-    rpc log(LogResponse) returns (Empty);
+    rpc log(LogRequest) returns (Empty);
 }
 
 message Empty{}
@@ -53,7 +60,13 @@ message Response{
     repeated Item item = 1;
 }
 
-message LogResponse {
+message LogRequest {
     string message = 1;
     Image image = 2;
+}
+
+message NotificationRequest{
+    string camID = 1;
+    repeated Class class_type = 2;
+    string workplace = 3;
 }
