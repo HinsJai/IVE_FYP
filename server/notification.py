@@ -25,7 +25,8 @@ except ImportError:
 from protos.proto_pb2 import Class, Empty
 from protos.proto_pb2_grpc import (
     Violation_NotificationServicer,
-    add_Violation_NotificationServicer_to_server)
+    add_Violation_NotificationServicer_to_server,
+)
 
 with open("config.toml", "rb") as config:
     config = tomllib.load(config)
@@ -43,10 +44,16 @@ del config
 class NotificationServer:
     __server: grpc.server = field(init=False)
     __logger: Logger = field(init=False)
+    __websocket_server_thread: Thread = field(init=False)
 
     def __post_init__(self) -> None:
         self.__logger = get_logger("Notification Server")
         self.__server = grpc.server(futures.ThreadPoolExecutor(max_workers=4))
+        self.__websocket_server_thread = Thread(
+            target=start_websocket_server,
+            daemon=True,
+            name="Notification Websocket Server",
+        )
 
     def __enter__(self) -> Self:
         add_Violation_NotificationServicer_to_server(
@@ -65,6 +72,7 @@ class NotificationServer:
         self.__logger.info("Server Closed")
 
     def start(self) -> None:
+        self.__websocket_server_thread.start()
         self.log_to_console(
             f"Server started at {GRPC_NOTIFICATION_URL}:{GRPC_NOTIFICATION_PORT}"
         )
@@ -74,7 +82,7 @@ class NotificationServer:
 
 
 class WebSocketNotificationServer:
-    def __init__(self, host:str, port:int, with_history: bool = False) -> None:
+    def __init__(self, host: str, port: int, with_history: bool = False) -> None:
         self.host = host
         self.port = port
         self.clients = set()
@@ -117,13 +125,13 @@ class WebSocketNotificationServer:
 class NotificationService(Violation_NotificationServicer):
     def __init__(self, server: NotificationServer) -> None:
         super().__init__()
-        self.__server = server
+        # self.__server = server
 
     @override
     def notification(self, request, context) -> Empty:
-        self.__server.log_to_console(
-            f"{context.peer()} connected with inference server"
-        )
+        # self.__server.log_to_console(
+        #     f"{context.peer()} connected with inference server"
+        # )
         asyncio.run_coroutine_threadsafe(
             ws_server.send_to_all(MessageToJson(request)), ws_server.loop
         )
@@ -135,7 +143,7 @@ def start_websocket_server():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     ws_server = server = WebSocketNotificationServer(
-        WEBSOCKET_NOTIFICATION_URL, WEBSOCKET_NOTIFICATION_PORT,with_history=True
+        WEBSOCKET_NOTIFICATION_URL, WEBSOCKET_NOTIFICATION_PORT, with_history=True
     )
     start_server = websockets.serve(server.handler, server.host, server.port)
     loop.run_until_complete(start_server)
@@ -143,9 +151,5 @@ def start_websocket_server():
 
 
 if __name__ == "__main__":
-    websocket = Thread(
-        target=start_websocket_server, daemon=True, name="Notification Websocket Server"
-    )
-    websocket.start()
     with NotificationServer() as server:
         server.start()

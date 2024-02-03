@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP</title>
+    <script src="../js/jquery-3.7.1.min.js"></script>
+    <script src="../js/tailwindcss-3.4.1.js"></script>
+    <script src="../js/fontawesome-c30932d00b.js" crossorigin="anonymous"></script>
+    <script src="../js/function.js"></script>
+</head>
+
+<body>
+    <img src="../images/login_bg.png" class="absolute z-0 bg-no-repeat bg-center w-full h-full">
+    <div class="absolute w-full h-full bg-neutral-900/50 z-1"></div>
+    <div class="absolute flex gap-2 top-7 left-8 z-2">
+        <img src="../images/logo3.png" class="w-12">
+        <span class="text-4xl font-bold text-[#FFBE00]">COS</span>
+    </div>
+
+    <div class="flex justify-center items-center h-screen">
+        <div class="w-[30rem] rounded-md p-10 shadow-2xl z-10 bg-white/70 backdrop-blur-sm">
+            <form action="/verify_otp_api" method="post">
+                <div class="text-center">
+                    <p class="text-4xl font-bold mb-5">OTP Verification</p>
+                    <i class="fa-solid fa-shield-halved text-6xl mb-4"></i>
+                    <p>Enter the one-time password you received at</p>
+                    <p class="font-bold">jason199794@gmail.com</p>
+                </div>
+                <div>
+                    <input type="number" name="otp" value="" hidden>
+                    <div id="otp" class="flex flex-row justify-center text-center px-2 mt-5">
+                        <input class="m-2 border h-10 w-10 text-center form-control rounded" type="number" id="first"
+                            min="0" max="9" maxlength="1" />
+                        <input class="m-2 border h-10 w-10 text-center form-control rounded" type="number" id="second"
+                            min="0" max="9" maxlength="1" />
+                        <input class="m-2 border h-10 w-10 text-center form-control rounded" type="number" id="third"
+                            min="0" max="9" maxlength="1" />
+                        <input class="m-2 border h-10 w-10 text-center form-control rounded" type="number" id="fourth"
+                            min="0" max="9" maxlength="1" />
+                        <input class="m-2 border h-10 w-10 text-center form-control rounded" type="number" id="fifth"
+                            min="0" max="9" maxlength="1" />
+                        <input class="m-2 border h-10 w-10 text-center form-control rounded" type="number" id="sixth"
+                            min="0" max="9" maxlength="1" />
+                    </div>
+                </div>
+                <!-- <label class="relative">
+                <input required type="number" name="otp" class="w-full pl-4 pr-12 py-2 text-lg text-black-50 outline-none border-2 border-gray-400 
+                                rounded hover:border-gray-600 duration-200 peer focus:border-indigo-600 bg-inherit">
+                <span class="absolute left-0 top-0 px-1 text-lg text-black-50 tracking-wide pointer-events-none 
+                                duration-200 peer-focus:text-sm peer-focus:-translate-y-5 ml-2
+                                peer-valid:text-sm peer-valid:-translate-y-5 peer-valid:bg-[#262626]">Enter OTP</span>
+            </label> -->
+                <div class="flex justify-center text-center mt-5">
+                    <button
+                        class="select-none rounded-lg bg-gradient-to-tr from-gray-900 to-gray-800 py-3 px-6 text-center align-middle font-sans text-lg font-bold uppercase text-white shadow-md 
+                        shadow-gray-900/10 transition-all hover:shadow-lg hover:shadow-gray-900/20 active:opacity-[0.85] disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none">Verify
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div class="absolute flex bottom-6 right-7 gap-7 text-xl text-slate-50 z-2">
+            <i class="fa-brands fa-instagram"></i>
+            <i class="fa-brands fa-square-facebook"></i>
+            <i class="fa-brands fa-linkedin-in"></i>
+            <i class="fa-brands fa-youtube"></i>
+        </div>
+    </div>
+
+</body>
+
+
+<script>
+    $(document).ready(function () {
+        $("#otp").children().keyup(function () {
+            if ($(this).val().length == $(this).attr("maxlength")) {
+                $(this).next().focus();
+            }
+        });
+    });
+
+    //addenventlistener to the button
+    document.querySelector("button").addEventListener("click", (envent) => {
+        event.preventDefault();
+        verify_otp();
+    });
+
+    function verify_otp() {
+        var otp = "";
+        $("#otp").children().each(function () {
+            otp += $(this).val();
+        });
+        $("#otp_hidden").val(otp);
+        $.ajax({
+            contentType: "application/json",
+            url: "/verify_otp_api",
+            type: "POST",
+            data: JSON.stringify({
+                otp: parseInt(otp),
+            }),
+            success: function (response) {
+                if (response['success'] == false) {
+                    alert("Invalid OTP");
+                }
+                else {
+                    window.location.replace('./reset_password')
+                }
+            }
+        });
+    }
+</script>
+
+</html>

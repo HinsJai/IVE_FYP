@@ -98,14 +98,15 @@ type NewUser struct {
 // }
 
 type ForgotPassword struct {
-	Email    string `json:"email" xml:"email" form:"email"`
-	OTP      int    `json:"otp" xml:"otp" form:"otp"`
-	Password string `json:"password" xml:"password" form:"password"`
+	Email string `json:"email" xml:"email" form:"email"`
 }
 
 type ResetPasswordInfo struct {
-	Email       string `json:"email" xml:"email" form:"email"`
 	NewPassword string `json:"password" xml:"password" form:"password"`
+}
+
+type VerifyOtp struct {
+	OTP int `json:"otp" xml:"otp" form:"otp"`
 }
 
 var (
@@ -122,8 +123,9 @@ var (
 	box_conn      *grpc.ClientConn
 	frame_conn    *grpc.ClientConn
 	app           *fiber.App
-	otp_dict      map[string]int
-	otp_mutex     *sync.Mutex
+	// verify_email_dict map[string]bool
+	otp_dict  map[string]int
+	otp_mutex *sync.Mutex
 )
 
 func setup_db() {
@@ -261,6 +263,8 @@ func login(c *fiber.Ctx) error {
 			panic(err)
 		}
 
+		sess.Delete("approved_email")
+
 		return c.Redirect("/stream")
 	}
 	return c.Redirect("/?error=true")
@@ -280,10 +284,6 @@ func create_user(c *fiber.Ctx) error {
 		"url":     fmt.Sprintf("http://%s", config.web.url),
 	})
 }
-
-// func get_violated_notification(c *fiber.Ctx) error {
-
-// }
 
 func create_user_api(c *fiber.Ctx) error {
 	new_user := NewUser{}
@@ -431,79 +431,104 @@ func forgot_password(c *fiber.Ctx) error {
 
 func verify_email_api(c *fiber.Ctx) error {
 	forgot_password := ForgotPassword{}
-	var err error
-	if err = c.BodyParser(&forgot_password); err != nil {
-		return err
-	}
-
-	result, err := db.Query("SELECT 1 FROM user where email = $email;", map[string]string{
+	c.BodyParser(&forgot_password)
+	result, _ := db.Query("SELECT 1 FROM user where email = $email;", map[string]string{
 		"email": forgot_password.Email,
 	})
 	user_found := len(result.([]interface{})[0].(map[string]interface{})["result"].([]interface{})) == 1
+
+	if !user_found {
+		return c.JSON(map[string]bool{"success": false})
+	}
+
+	opt := rand.Intn(999999-100000) + 100000
+	otp_mutex.Lock()
+	otp_dict[forgot_password.Email] = opt
+	otp_mutex.Unlock()
+	sess, _ = store.Get(c)
+	sess.Set("approved_email", forgot_password.Email)
+	mg := mailgun.NewMailgun(config.mailgun.domain, config.mailgun.api_key)
+	m := mg.NewMessage(
+		fmt.Sprintf("<mailgun@%s>", config.mailgun.domain),
+		"Verification Code",
+		fmt.Sprintf("Your verification code is %d", otp_dict[forgot_password.Email]),
+		forgot_password.Email,
+	)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+	mg.Send(ctx, m)
+	sess.Save()
+	return c.Redirect("/verify_forgot_otp")
+}
+
+func verify_forgot_otp(c *fiber.Ctx) error {
+
+	sess, err := store.Get(c)
 	if err != nil {
 		panic(err)
 	}
-	if user_found {
-		//generate random six number
-		opt := rand.Intn(999999-100000) + 100000
-		otp_mutex.Lock()
-		otp_dict[forgot_password.Email] = opt
-		otp_mutex.Unlock()
 
-		mg := mailgun.NewMailgun(config.mailgun.domain, config.mailgun.api_key)
-		m := mg.NewMessage(
-			fmt.Sprintf("<mailgun@%s>", config.mailgun.domain),
-			"Verification Code",
-			fmt.Sprintf("Your verification code is %d", otp_dict[forgot_password.Email]),
-			forgot_password.Email,
-		)
+	approved_email := sess.Get("approved_email")
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
-		defer cancel()
-
-		_, _, err := mg.Send(ctx, m)
-		if err != nil {
-			panic(err)
-		}
-		return c.JSON(map[string]bool{"success": true})
+	if approved_email != nil {
+		return c.Render("verify_forgot_otp", fiber.Map{
+			"request": c,
+			"url":     fmt.Sprintf("http://%s", config.web.url),
+		})
 	}
-	return c.JSON(map[string]bool{"success": false})
+	return c.Redirect("/forgot_password")
 }
 
 func verify_otp_api(c *fiber.Ctx) error {
-	forgot_password := ForgotPassword{}
-	fmt.Println(forgot_password)
-	if err := c.BodyParser(&forgot_password); err != nil {
-		return err
-	}
+	sender_otp := VerifyOtp{}
+	c.BodyParser(&sender_otp)
+	sess, _ := store.Get(c)
+	approved_mail := sess.Get("approved_email").(string)
 	otp_mutex.Lock()
-	otp := otp_dict[forgot_password.Email]
+	otp := otp_dict[approved_mail]
 	otp_mutex.Unlock()
-	success := otp == forgot_password.OTP
+	success := otp == sender_otp.OTP
 	if success {
-		delete(otp_dict, forgot_password.Email)
+		delete(otp_dict, approved_mail)
 	}
 	return c.JSON(map[string]bool{"success": success})
 }
 
-func rest_password_api(c *fiber.Ctx) error {
-	reset_password_info := ResetPasswordInfo{}
-	if err := c.BodyParser(&reset_password_info); err != nil {
-		return err
-	}
-	fmt.Println(reset_password_info)
-	encrypted_password := get_encrypted_password(reset_password_info.NewPassword)[0].(map[string]interface{})["result"].(string)
-	result, err := db.Query("Update user set password=$password where email = $email", map[string]interface{}{
-		"email":    reset_password_info.Email,
-		"password": encrypted_password,
-	})
+func reset_password(c *fiber.Ctx) error {
+
+	sess, err := store.Get(c)
+
 	if err != nil {
 		fmt.Println(err)
 	}
-	if result != nil {
-		return c.Redirect("/")
+
+	if sess.Get("approved_email") == nil {
+		return c.Redirect("/forgot_password")
 	}
-	return c.JSON(result)
+
+	return c.Render("reset_password", fiber.Map{
+		"request": c,
+		"url":     fmt.Sprintf("http://%s", config.web.url),
+	})
+}
+
+func reset_password_api(c *fiber.Ctx) error {
+	reset_password_info := ResetPasswordInfo{}
+	sess, _ = store.Get(c)
+	if err := c.BodyParser(&reset_password_info); err != nil {
+		return err
+	}
+	encrypted_password := get_encrypted_password(reset_password_info.NewPassword)[0].(map[string]interface{})["result"].(string)
+	result, _ := db.Query("Update user set password=$password where email = $email", map[string]interface{}{
+		"email":    sess.Get("approved_email").(string),
+		"password": encrypted_password,
+	})
+	if result != nil {
+		sess.Delete("approved_email")
+		sess.Save()
+	}
+	return c.JSON(map[string]bool{"success": result != nil})
 }
 
 func start_server() {
@@ -512,11 +537,41 @@ func start_server() {
 	}
 }
 
+func setup_static(app *fiber.App) {
+	app.Static("/images", "./images")
+	app.Static("/navigation", "./navigation")
+	app.Static("/js", "./js")
+	app.Static("/css", "./css")
+}
+
+func setup_get(app *fiber.App) {
+	app.Get("/", index)
+	app.Get("/logout", logout)
+	app.Get("/stream", get_stream)
+	app.Get("/image", get_image)
+	app.Get("/box", get_box)
+	app.Get("/records", get_records)
+	app.Get("/records_api", get_records_api)
+	app.Get("/create_user", create_user)
+	app.Get("/users_list", get_users_list)
+	app.Get("/users_list_api", get_users_api)
+	app.Get("/forgot_password", forgot_password)
+	app.Get("/verify_forgot_otp", verify_forgot_otp)
+	app.Get("/reset_password", reset_password)
+}
+
+func setup_post(app *fiber.App) {
+	app.Post("/login", login)
+	app.Post("/create_user_api", create_user_api)
+	app.Post("/verify_email_api", verify_email_api)
+	app.Post("/verify_otp_api", verify_otp_api)
+	app.Post("/reset_password_api", reset_password_api)
+}
+
 func main() {
 	config = loadConfig()
 	otp_mutex = new(sync.Mutex)
 	otp_dict = make(map[string]int)
-
 	setup_db()
 	setup_client_pair(config.cam.url, config.server.url)
 	// setup_client_pair(config.cam.tim_url, config.server.tim_url)
@@ -526,6 +581,7 @@ func main() {
 	store = session.New(session.Config{
 		Expiration: 60 * 60 * time.Second,
 	})
+
 	engine := html.New("./views", ".html")
 	engine.Reload(true)
 	// engine.Debug(true)
@@ -542,37 +598,10 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	app.Static("/images", "./images")
-	app.Static("/navigation", "./navigation")
-	app.Static("/js", "./js")
-	app.Static("/css", "./css")
+	setup_static(app)
+	setup_get(app)
+	setup_post(app)
 
-	app.Get("/", index)
-	app.Post("/login", login)
-
-	app.Get("/logout", logout)
-
-	app.Get("/stream", get_stream)
-	app.Get("/image", get_image)
-	app.Get("/box", get_box)
-
-	app.Get("/records", get_records)
-	app.Get("/records_api", get_records_api)
-
-	app.Get("/create_user", create_user)
-	app.Post("/create_user_api", create_user_api)
-
-	app.Get("/users_list", get_users_list)
-	app.Get("/users_list_api", get_users_api)
-
-	app.Get("/forgot_password", forgot_password)
-	app.Post("/verify_email_api", verify_email_api)
-	app.Post("/verify_otp_api", verify_otp_api)
-	app.Post("/reset_password_api", rest_password_api)
-
-	// app.Get("/violated_notification", get_violated_notification)
-
-	// Start the Fiber server
 	go start_server()
 
 	var wg sync.WaitGroup
