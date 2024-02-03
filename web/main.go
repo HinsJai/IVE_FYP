@@ -129,7 +129,6 @@ var (
 )
 
 func setup_db() {
-
 	var err error
 	db, err = surrealdb.New(config.database.url)
 	if err != nil {
@@ -293,7 +292,7 @@ func create_user_api(c *fiber.Ctx) error {
 	}
 	encrypted_pass := get_encrypted_password(new_user.Password)[0].(map[string]interface{})["result"].(string)
 
-	result, err := db.Create("user", map[string]interface{}{
+	result, _ := db.Create("user", map[string]interface{}{
 		"email":                   new_user.Email,
 		"password":                encrypted_pass,
 		"firstName":               new_user.FirstName,
@@ -306,9 +305,6 @@ func create_user_api(c *fiber.Ctx) error {
 		"emergencyLastName":       new_user.EmergencyLastName,
 		"emergencyPersonRelation": new_user.EmergencyPersonRelation,
 	})
-	if err != nil {
-		panic(err)
-	}
 	if result != nil {
 		return c.Redirect("/create_user")
 	}
@@ -342,7 +338,6 @@ func get_records(c *fiber.Ctx) error {
 }
 
 func get_records_api(c *fiber.Ctx) error {
-
 	result, err := db.Query("SELECT * FROM violation_record;", map[string]string{})
 	if err != nil {
 		return c.SendString(fmt.Sprintf("Error: %v", err))
@@ -404,6 +399,22 @@ func get_box(c *fiber.Ctx) error {
 		return fiber.ErrServiceUnavailable
 	}
 	return c.JSON(box_data[id])
+}
+
+func get_dashboard(c *fiber.Ctx) error {
+	var err error
+	sess, err = store.Get(c)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	if sess.Get("email") == nil {
+		return c.Redirect("/?unauth=true")
+	}
+	return c.Render("dashboard", fiber.Map{
+		"request": c,
+		"url":     fmt.Sprintf("http://%s", config.web.url),
+	})
 }
 
 func logout(c *fiber.Ctx) error {
@@ -550,6 +561,7 @@ func setup_get(app *fiber.App) {
 	app.Get("/stream", get_stream)
 	app.Get("/image", get_image)
 	app.Get("/box", get_box)
+	app.Get("/dashboard", get_dashboard)
 	app.Get("/records", get_records)
 	app.Get("/records_api", get_records_api)
 	app.Get("/create_user", create_user)
