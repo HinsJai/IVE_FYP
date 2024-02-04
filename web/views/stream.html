@@ -28,61 +28,41 @@
         </div>
         <div style="height: 80%;" class="grid grid-cols-2 grid-rows-2 gap-2">
             <div class="overflow-hidden">
-                <img id="image1" src="{{.url}}" alt="cam-01" width="640" height="480" hidden>
+                <img class="stream" id="image1" src="{{.url}}" alt="cam-01" width="640" height="480" hidden>
                 <canvas id="canvas" class="bg-slate-500 w-full h-full"></canvas>
             </div>
             <div class="overflow-hidden">
-                <img id="image2" src="{{.url}}" alt="cam-02" width="640" height="480" hidden>
+                <img class="stream" id="image2" src="{{.url}}" style="width: 100%; height: 100%;" alt="cam-02"
+                    width="640" height="480">
                 <canvas id="canvas2" class="bg-slate-500 w-full h-full"></canvas>
             </div>
             <div class="overflow-hidden">
-                <img id="image3" src="{{.url}}" alt="cam-03" width="640" height="480" hidden>
-                <!-- <canvas id="canvas3" class="bg-slate-500 w-full h-full"></canvas> -->
+                <img class="stream" id="image3" src="{{.url}}" style="width: 100%; height: 100%;" alt="cam-03"
+                    width="640" height="480">
+                <canvas id="canvas3" class="bg-slate-500 w-full h-full"></canvas>
             </div>
             <div class="overflow-hidden">
-                <img id="image4" src="{{.url}}" alt="cam-04" width="640" height="480" hidden>
-                <!-- <canvas id="canvas4" class="bg-slate-500 w-full h-full"></canvas> -->
+                <img class="stream" id="image4" src="{{.url}}" style="width: 100%; height: 100%;" alt="cam-04"
+                    width="640" height="480">
+                <canvas id="canvas4" class="bg-slate-500 w-full h-full"></canvas>
             </div>
         </div>
         <div style="height: 10%;" class="bg-[#222222]">
-
         </div>
     </div>
     <div class="basis-72 px-3 py-7">
         <div style="height: 7%;" class="relative text-center justify-center">
             <p class="text-slate-50 text-2xl">Notification</p>
-            <!-- <label class="relative">
-                <input type="text" class="bg-[#222222] text-slate-50 outline-none pl-2 pr-8">
-                <i class="fa-solid fa-magnifying-glass text-slate-50 absolute right-2 top-1"></i>
-            </label>
-            <i
-                class="fa-solid fa-arrow-up-a-z text-slate-50 ml-1 hover:bg-[#FFBE00] px-1 py-1 rounded-md cursor-pointer"></i> -->
         </div>
-        <div style="height: 36%;" class="border border-slate-50" id="notic-container">
-            <!-- <div style=" height: 86%;"> -->
-            <!-- <div class="overflow-hidden mb-2">
-                <img src="hin_gor_1.png" class="bg-no-repeat bg-center w-full h-full">
-            </div>
-            <div class="overflow-hidden mb-2">
-                <img src="hin_gor_2.png" class="bg-no-repeat bg-center w-full h-full">
-            </div>
-            <div class="overflow-hidden">
-                <img src="hin_gor_3.png" class="bg-no-repeat bg-center w-full h-full">
-            </div>
-        </div>
-        <hr>
-        <div style="height: 6%;" class="flex justify-between items-center text-lg text-slate-600">
-            <span class="text-slate-50">Control</span>
-            <i
-                class="fa-solid fa-chevron-up text-slate-50 pt-1 hover:bg-[#FFBE00] px-1 py-1 rounded-md cursor-pointer"></i> -->
-        </div>
-    </div>
+        <div style="height:83%" class="overflow-hidden" id="notic-container"></div>
 </body>
 
 <script>
     //store 4 cams box
     boxes = [[], [], [], []]
     images = [[], [], [], []]
+    normal_timeout = 0
+    error_timeout = 500
 
     let canvas_array = [
         document.getElementById("canvas"),
@@ -96,8 +76,8 @@
     async function update_image_box(box_id, stream_source) {
         const image = document.getElementById(box_id);
         url = image.src;
-        get_images(stream_source, url);
-        get_boxes(stream_source, url);
+        get_data(images, response => response.arrayBuffer(), "image", stream_source, url);
+        get_data(boxes, response => response.json(), "box", stream_source, url);
         update_image(stream_source, url);
     }
 
@@ -132,49 +112,34 @@
                 ctx.rect(scaledX1, scaledY1, scaledWidth, scaledHeight);
                 ctx.stroke();
             }
-            setTimeout(update_image, 0, stream_source, url)
+            setTimeout(update_image, normal_timeout, stream_source, url)
             URL.revokeObjectURL(urlObject);
         });
+
         image.addEventListener('error', function () {
-            setTimeout(update_image, 50, stream_source, url)
+            $(".stream").attr("src", "../images/cam_unavailable.jpg");
+            setTimeout(update_image, error_timeout, stream_source, url)
         })
     }
 
-    async function get_images(stream_source, url) {
-        fetch(`${url}image?stream_source=${stream_source}`)
+    async function get_data(storage, callback, data_type, stream_source, url) {
+        fetch(`${url}${data_type}?stream_source=${stream_source}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                return response.arrayBuffer()
+                return callback(response)
             })
-            .then(arrayBuffer => {
-                images[stream_source] = arrayBuffer;
-            })
-            .catch(e => {
-                console.log('There has been a problem with your fetch operation: ' + e.message);
-            }).finally(
-                e => {
-                    setTimeout(get_images, 50, stream_source, url);
-                }
-            )
-    }
-    async function get_boxes(stream_source, url) {
-        fetch(`${url}box?stream_source=${stream_source}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(json => {
-                boxes[stream_source] = json;
+            .then(data => {
+                storage[stream_source] = data;
+                timeout = normal_timeout;
             })
             .catch(e => {
-                console.log('There has been a problem with your fetch operation: ' + e.message);
+                console.log(`There has been a problem with your fetch operation: ${e.message}`);
+                timeout = error_timeout;
             }).finally(
                 e => {
-                    setTimeout(get_boxes, 0, stream_source, url);
+                    setTimeout(get_data, timeout, storage, callback, data_type, stream_source, url);
                 }
             )
     }
@@ -250,7 +215,7 @@
         }
         for (let i = 0; i < canvas_array.length; ++i) {
             update_image_box(`image${i + 1}`, i)
-            //update_image_box(`image${i + 1}`, 0)
+            // update_image_box(`image${i + 1}`, 0)
         }
     })
 </script>
@@ -262,7 +227,7 @@
     };
 
     socket.addEventListener("open", (event) => {
-        socket.send("Hello Server!");
+        // socket.send("Hello Server!");
         console.log("Connected to server");
     });
 
@@ -272,10 +237,26 @@
     // });
 
     socket.onmessage = function (event) {
-        const data = JSON.parse(event.data)
+        const data = JSON.parse(event.data);
         console.log("Message from server ", data);
 
-        //camID , workplace, classType
+        const { camID, workplace, classType } = data;
+        const notification = document.getElementById("notic-container");
+
+        // Create a new notification element
+        const newNotification = document.createElement('div');
+        newNotification.innerHTML =
+            `<p class="text-red-500 font-semibold">CamID:<span class="text-slate-50 font-semibold"> ${camID}</span></p><br>
+            <p class="text-red-500 font-semibold">Workplace:<span class="text-slate-50 font-semibold"> ${workplace}</span></p><br>
+            <p class="text-red-500 font-semibold">Violation:<span class="text-slate-50 font-semibold"> ${classType}</span></p><br>
+            <hr class="mb-2">`;
+        // Add the new notification at the top
+        notification.insertBefore(newNotification, notification.firstChild);
+
+        // Remove the last notification
+        while (notification.children.length > 4) {
+            notification.removeChild(notification.lastChild);
+        }
     };
 
     socket.onerror = function (error) {

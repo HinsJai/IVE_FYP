@@ -14,6 +14,11 @@
 
 <body class="flex h-screen gap-2 bg-black">
     <div id="side-bar" class="basis-64 bg-black px-2"></div>
+    <script>
+        $(document).ready(function () {
+            $("#side-bar").load('../navigation/side_bar.html');
+        })
+    </script>
     <div class="flex-1 bg-[#222222] p-8">
         <div style="height: 10%;" class="flex items-center justify-between text-slate-50 w-full mb-5">
             <p class="font-bold text-4xl">Dashboard</p>
@@ -70,12 +75,6 @@
         </div>
     </div>
 </body>
-
-<script>
-    $(document).ready(function () {
-        $("#side-bar").load('../navigation/side_bar.html');
-    })
-</script>
 
 <script>
     const ctx = document.getElementById('myChart');

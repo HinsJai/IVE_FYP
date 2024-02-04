@@ -103,7 +103,7 @@ class AnalysisService(AnalysisServicer):
             _, buffer = cv2.imencode(".jpg", frame)
             yield Image(data=base64.b64encode(buffer))  # Send as base64 encoded
             # time.sleep(1 / 60)  # Control the frame rate
-            time.sleep(1 / 30)
+            time.sleep(1 / 24)
 
 
 if __name__ == "__main__":

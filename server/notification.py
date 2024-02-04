@@ -143,7 +143,7 @@ def start_websocket_server():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     ws_server = server = WebSocketNotificationServer(
-        WEBSOCKET_NOTIFICATION_URL, WEBSOCKET_NOTIFICATION_PORT, with_history=True
+        WEBSOCKET_NOTIFICATION_URL, WEBSOCKET_NOTIFICATION_PORT, with_history=False
     )
     start_server = websockets.serve(server.handler, server.host, server.port)
     loop.run_until_complete(start_server)

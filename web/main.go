@@ -470,7 +470,7 @@ func verify_email_api(c *fiber.Ctx) error {
 	defer cancel()
 	mg.Send(ctx, m)
 	sess.Save()
-	return c.Redirect("/verify_forgot_otp")
+	return c.JSON(map[string]bool{"success": true})
 }
 
 func verify_forgot_otp(c *fiber.Ctx) error {
