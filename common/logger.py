@@ -1,12 +1,12 @@
 import logging
-from typing import TextIO
 from logging import Logger
+from typing import TextIO
 
 from colorlog import ColoredFormatter
 from colorlog import StreamHandler
 
 
-def logger_handler():
+def logger_handler() -> StreamHandler[TextIO]:
     formatter = ColoredFormatter(
         "{green}{asctime}{reset} :: {bold_purple}{name:^13}{reset} :: {log_color}{levelname:^8}{reset} :: {bold_white}{message}",
         datefmt="%H:%M:%S",

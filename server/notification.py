@@ -7,26 +7,27 @@ sys.path.extend([".."])
 import asyncio
 from collections import deque
 from concurrent import futures
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from dataclasses import field
 from threading import Thread
-from typing import Any, Self
+from typing import Self
 
+from google.protobuf.json_format import MessageToJson
 import grpc
 import websockets
-from google.protobuf.json_format import MessageToJson
 
-from logger import Logger, get_logger
+from common.logger import get_logger
+from common.logger import Logger
 
 try:
-    from typing import Self, override
+    from typing import override, Self
 except ImportError:
     from typing_extensions import Self, override
 
-from protos.proto_pb2 import Class, Empty
-from protos.proto_pb2_grpc import (
-    Violation_NotificationServicer,
-    add_Violation_NotificationServicer_to_server,
-)
+from protos.proto_pb2 import Class
+from protos.proto_pb2 import Empty
+from protos.proto_pb2_grpc import add_Violation_NotificationServicer_to_server
+from protos.proto_pb2_grpc import Violation_NotificationServicer
 
 with open("config.toml", "rb") as config:
     config = tomllib.load(config)

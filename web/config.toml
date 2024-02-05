@@ -30,26 +30,3 @@ database = "violation_record"
 [mailgun]
 api_key = "9f26f3e6ac01a207c2486ded72bc3b7d-063062da-1ac88543"
 domain = "sandboxc7768c16bf104067b4e0bca7e0bed658.mailgun.org"
-
-
-# [cam]
-# url = "localhost"
-# port = 8878
-
-# [web]
-# url = "05wbdt0x-8007.asse.devtunnels.ms"
-# # url = "29zpmw89-8007.asse.devtunnels.ms"
-# # url = "localhost:8007"
-# index = "index"
-# port = 8007
-
-# [server]
-# url = "localhost"
-# port = 8788
-
-# [user_database]
-# url = "ws://localhost:8080/rpc"
-# user = "root"
-# pass = "root"
-# namespace = "fyp"
-# database = "violation_record"

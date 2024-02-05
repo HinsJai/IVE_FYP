@@ -542,8 +542,31 @@ func reset_password_api(c *fiber.Ctx) error {
 	return c.JSON(map[string]bool{"success": result != nil})
 }
 
+// app.Get("/image_ws/:stream_source", websocket.New(func(c *websocket.Conn) {
+// 	log.Println(c.Params("stream_source"))
+// 	c.Write(frame_data[id])
+// 	var (
+// 		mt  int
+// 		msg []byte
+// 		err error
+// 	)
+// 	for {
+// 		if mt, msg, err = c.ReadMessage(); err != nil {
+// 			log.Println("read:", err)
+// 			break
+// 		}
+// 		log.Printf("recv: %s", msg)
+
+// 		if err = c.WriteMessage(mt, msg); err != nil {
+// 			log.Println("write:", err)
+// 			break
+// 		}
+// 	}
+
+// }))
+
 func start_server() {
-	if err := app.Listen(fmt.Sprintf(":%d", config.web.port)); err != nil {
+	if err := app.Listen(fmt.Sprintf("127.0.0.1:%d", config.web.port)); err != nil {
 		log.Fatalf("Error starting server: %v", err)
 	}
 }

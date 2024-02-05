@@ -1,1 +1,1 @@
-cd server &&  py -3.11 discord_log_server.py
+source venv/Scripts/activate && cd server && py discord_log_server.py

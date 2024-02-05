@@ -1,25 +1,24 @@
 import base64
+from concurrent import futures
 import contextlib
+from dataclasses import dataclass
+from dataclasses import field
 import sys
 import threading
 import time
-from concurrent import futures
-from dataclasses import dataclass, field
 from typing import NoReturn, Self
 
 import cv2
 import grpc
 
-# from numpy.typing import NDArray
-
 sys.path.extend([".."])
-import tomllib
 from logging import Logger
+import tomllib
 
-from logger import get_logger
+from common.logger import get_logger
 from protos.proto_pb2 import Image
-from protos.proto_pb2_grpc import (AnalysisServicer,
-                                   add_AnalysisServicer_to_server)
+from protos.proto_pb2_grpc import add_AnalysisServicer_to_server
+from protos.proto_pb2_grpc import AnalysisServicer
 
 # Load configuration once and store it in constants
 with open("config.toml", "rb") as config:
@@ -47,11 +46,8 @@ class CamServer:
         self.__cam_ip = CAM_URL
         self.__cam_port = CAM_PORT
         self.__logger = get_logger("Cam Server")
-        self.__server = grpc.server(
-            futures.ThreadPoolExecutor(max_workers=4)
-        )  # Limit the number of threads
+        self.__server = grpc.server(futures.ThreadPoolExecutor())
         self.__cap = cv2.VideoCapture(CAMERA)
-        # self.__cap = cv2.VideoCapture("../test1080p.mp4")
 
     def __enter__(self) -> Self:
         self.__setup_camera()

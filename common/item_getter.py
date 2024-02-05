@@ -1,10 +1,9 @@
-import threading
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 import sys
-import grpc
+import threading
 
-# import proto_pb2
-# import proto_pb2_grpc
+import grpc
 
 sys.path.extend([".."])
 
@@ -19,17 +18,16 @@ class ItemGetter(ABC):
         self.__thread = threading.Thread(target=self.__get_item, daemon=True)
 
     def __get_item(self) -> None:
-        # print("get item")
         with grpc.insecure_channel(f"{self.__ip}:{self.__port}") as channel:
             stub = AnalysisStub(channel)
             self.get_item(stub)
 
     @abstractmethod
-    def get_item(self, stub):
-        ...
+    def get_item(self, stub): ...
 
     def start(self) -> None:
         self.__thread.start()
+
 
 class FrameGetter(ItemGetter):
     def get_item(self, stub):
