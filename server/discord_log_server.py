@@ -1,7 +1,8 @@
+import io
 import sys
 import tomllib
 from typing import Any, Self
-import io
+
 import discord
 from discord import app_commands
 
@@ -11,7 +12,8 @@ import asyncio
 from dataclasses import dataclass, field
 
 from protos.proto_pb2 import Empty
-from protos.proto_pb2_grpc import DiscordLogServicer, add_DiscordLogServicer_to_server
+from protos.proto_pb2_grpc import (DiscordLogServicer,
+                                   add_DiscordLogServicer_to_server)
 
 try:
     from typing import Self, override

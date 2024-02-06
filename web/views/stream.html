@@ -32,18 +32,15 @@
                 <canvas id="canvas" class="bg-slate-500 w-full h-full"></canvas>
             </div>
             <div class="overflow-hidden">
-                <img class="stream" id="image2" src="{{.url}}" style="width: 100%; height: 100%;" alt="cam-02"
-                    width="640" height="480">
+                <img class="stream" id="image2" src="{{.url}}" alt="cam-02" width="640" height="480" hidden>
                 <canvas id="canvas2" class="bg-slate-500 w-full h-full"></canvas>
             </div>
             <div class="overflow-hidden">
-                <img class="stream" id="image3" src="{{.url}}" style="width: 100%; height: 100%;" alt="cam-03"
-                    width="640" height="480">
+                <img class="stream" id="image3" src="{{.url}}" alt="cam-03" width="640" height="480" hidden>
                 <canvas id="canvas3" class="bg-slate-500 w-full h-full"></canvas>
             </div>
             <div class="overflow-hidden">
-                <img class="stream" id="image4" src="{{.url}}" style="width: 100%; height: 100%;" alt="cam-04"
-                    width="640" height="480">
+                <img class="stream" id="image4" src="{{.url}}" alt="cam-04" width="640" height="480" hidden>
                 <canvas id="canvas4" class="bg-slate-500 w-full h-full"></canvas>
             </div>
         </div>
@@ -61,14 +58,14 @@
     //store 4 cams box
     boxes = [[], [], [], []]
     images = [[], [], [], []]
-    normal_timeout = 0
-    error_timeout = 500
+    normal_timeout = 100
+    error_timeout = 300000 //5 mins
 
     let canvas_array = [
         document.getElementById("canvas"),
-        // document.getElementById("canvas2"),
-        //document.getElementById("canvas3"),
-        //document.getElementById("canvas4"),
+        document.getElementById("canvas2"),
+        document.getElementById("canvas3"),
+        document.getElementById("canvas4"),
     ]
 
     let scale = window.devicePixelRatio
@@ -117,7 +114,8 @@
         });
 
         image.addEventListener('error', function () {
-            $(".stream").attr("src", "../images/cam_unavailable.jpg");
+            image.hidden = false;
+            image.src = "../images/cam_unavailable.jpg";
             setTimeout(update_image, error_timeout, stream_source, url)
         })
     }
@@ -126,6 +124,7 @@
         fetch(`${url}${data_type}?stream_source=${stream_source}`)
             .then(response => {
                 if (!response.ok) {
+                    console.log(response)
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 return callback(response)

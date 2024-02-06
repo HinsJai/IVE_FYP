@@ -10,10 +10,7 @@ service Analysis{
 }
 
 service Violation_Notification{
-    rpc notification(NotificationRequest) returns (Empty); //infer -> notf
-    //notf tcp -> client
-    //client -> http get notf
-    // rpc get_notification(Empty) returns (stream NotificationRequest); //no need 
+    rpc notification(NotificationRequest) returns (Empty); 
 }
 
 // service TimAnalysis{
