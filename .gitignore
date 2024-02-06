@@ -4,3 +4,5 @@
 /client/__pycache__
 /protos/__pycache__
 /venv
+**/video
+/db_data

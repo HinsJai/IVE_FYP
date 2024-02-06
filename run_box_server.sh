@@ -1,1 +1,1 @@
-source venv/Scripts/activate && cd server && py box.py
+source venv/Scripts/activate && cd server && python box.py

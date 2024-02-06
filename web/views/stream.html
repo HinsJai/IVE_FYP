@@ -5,8 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy"
-        content="connect-src 'self' ws://localhost:8574/ {{.url}}/box {{.url}}/image https://ka-f.fontawesome.com;">
-
+        content="connect-src 'self' ws://localhost:8574/ {{.url}}/box 'self' ws://localhost:8007/image 'self' ws://localhost:8007/box https://ka-f.fontawesome.com;">
     <title>FYP</title>
     <script src="../js/jquery-3.7.1.min.js"></script>
     <script src="../js/tailwindcss-3.4.1.js"></script>
@@ -76,17 +75,15 @@
     async function update_image_box(box_id, stream_source) {
         const image = document.getElementById(box_id);
         url = image.src;
-        get_data(images, response => response.arrayBuffer(), "image", stream_source, url);
-        get_data(boxes, response => response.json(), "box", stream_source, url);
+        get_data_ws(images, stream_source, "image");
+        get_data_ws(boxes, stream_source, "box");
         update_image(stream_source, url);
     }
 
     async function update_image(stream_source, url) {
         let arrayBuffer = images[stream_source];
         let urlObject = URL.createObjectURL(new Blob([arrayBuffer]));
-
         let image = new Image()
-
         image.src = urlObject
 
         let canvas = canvas_array[stream_source]
@@ -95,7 +92,7 @@
 
         image.addEventListener("load", function () {
             ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-            let box = boxes[stream_source]
+            let box = JSON.parse(boxes[stream_source]);
             for (let i = 0; i < box.length; ++i) {
                 const scaledX1 = box[i].x1 * (canvas.width / image.width);
                 const scaledY1 = box[i].y1 * (canvas.height / image.height);
@@ -142,6 +139,19 @@
                     setTimeout(get_data, timeout, storage, callback, data_type, stream_source, url);
                 }
             )
+    }
+
+    async function get_data_ws(storage, stream_source, data_type) {
+        const socket = new WebSocket(`ws://localhost:8007/${data_type}?stream_source=${stream_source}`);
+        socket.onmessage = function (response) {
+            storage[stream_source] = response.data;
+        };
+        socket.onerror = function (error) {
+            if (data_type == "image") {
+                $(".stream").attr("src", "../images/cam_unavailable.jpg");
+            }
+            setTimeout(get_data_ws, error_timeout, storage, stream_source, data_type);
+        };
     }
 
     function create_resize_function(canvas) {
@@ -227,14 +237,8 @@
     };
 
     socket.addEventListener("open", (event) => {
-        // socket.send("Hello Server!");
         console.log("Connected to server");
     });
-
-    // socket.addEventListener("message", (event) => {
-    //     console.log("Message from server ", event);
-    //     console.log("Message from server ", event.data);
-    // });
 
     socket.onmessage = function (event) {
         const data = JSON.parse(event.data);

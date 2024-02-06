@@ -1,1 +1,1 @@
-source venv/Scripts/activate && cd client && py cam.py
+source venv/Scripts/activate && cd client && python cam.py

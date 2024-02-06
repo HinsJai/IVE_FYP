@@ -1,1 +1,1 @@
-source venv/Scripts/activate && cd server && py notification.py
+source venv/Scripts/activate && cd server && python notification.py
