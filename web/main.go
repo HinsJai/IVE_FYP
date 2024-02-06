@@ -149,11 +149,15 @@ func setup_db() {
 
 func setup_client_pair(cam_url string, server_url string) {
 	var err error
+	fmt.Println("123")
 	frame_conn, err = grpc.Dial(cam_url, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
+	fmt.Println("456")
 	if err != nil {
 		log.Fatalf("did not connect to FrameGetter: %v", err)
 	}
+	fmt.Println("789")
 	box_conn, err = grpc.Dial(server_url, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
+	fmt.Println("101112")
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
@@ -585,7 +589,7 @@ func main() {
 	otp_dict = make(map[string]int)
 	setup_db()
 	setup_client_pair(config.cam.url, config.server.url)
-	// setup_client_pair(config.cam.tim_url, config.server.tim_url)
+	setup_client_pair(config.cam.tim_url, config.server.tim_url)
 	defer frame_conn.Close()
 	defer box_conn.Close()
 

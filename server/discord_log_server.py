@@ -19,6 +19,7 @@ from common.logger import get_logger
 from common.logger import Logger
 from common.logger import logger_handler
 from protos.proto_pb2 import Empty
+
 from protos.proto_pb2_grpc import add_DiscordLogServicer_to_server
 from protos.proto_pb2_grpc import DiscordLogServicer
 

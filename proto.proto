@@ -10,7 +10,7 @@ service Analysis{
 }
 
 service Violation_Notification{
-    rpc notification(NotificationRequest) returns (Empty);
+    rpc notification(NotificationRequest) returns (Empty); 
 }
 
 service DiscordLog {
