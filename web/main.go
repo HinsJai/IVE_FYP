@@ -384,14 +384,6 @@ func get_stream(c *fiber.Ctx) error {
 	})
 }
 
-// func get_box(c *fiber.Ctx) error {
-// 	id := c.QueryInt("stream_source", -1)
-// 	if id > len(box_clients)-1 || id < 0 {
-// 		return fiber.ErrServiceUnavailable
-// 	}
-// 	return c.JSON(box_data[id])
-// }
-
 func get_dashboard(c *fiber.Ctx) error {
 	var err error
 	sess, err = store.Get(c)
@@ -537,6 +529,7 @@ func image_ws(c *websocket.Conn) {
 	id, _ := strconv.Atoi(c.Query("id"))
 	for {
 		c.WriteMessage(websocket.BinaryMessage, frame_data[id])
+		time.Sleep(24 * time.Millisecond)
 	}
 }
 
@@ -544,6 +537,7 @@ func box_ws(c *websocket.Conn) {
 	id, _ := strconv.Atoi(c.Query("id"))
 	for {
 		c.WriteJSON(box_data[id])
+		time.Sleep(1 * time.Millisecond)
 	}
 }
 
@@ -564,8 +558,6 @@ func setup_get(app *fiber.App) {
 	app.Get("/", index)
 	app.Get("/logout", logout)
 	app.Get("/stream", get_stream)
-	// app.Get("/image", get_image)
-	// app.Get("/box", get_box)
 	app.Get("/dashboard", get_dashboard)
 	app.Get("/records", get_records)
 	app.Get("/records_api", get_records_api)

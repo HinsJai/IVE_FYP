@@ -7,9 +7,9 @@
     <meta http-equiv="Content-Security-Policy"
         content="connect-src 'self' ws://localhost:8574/ {{.url}}/box 'self' ws://localhost:8007/image 'self' ws://localhost:8007/box https://ka-f.fontawesome.com;">
     <title>FYP</title>
-    <script src="../js/jquery-3.7.1.min.js"></script>
-    <script src="../js/tailwindcss-3.4.1.js"></script>
-    <script src="../js/fontawesome-c30932d00b.js" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/c30932d00b.js" crossorigin="anonymous"></script>
     <script src="../js/function.js"></script>
 </head>
 
@@ -117,28 +117,6 @@
             $(".stream").attr("src", "../images/cam_unavailable.jpg");
             setTimeout(update_image, error_timeout, stream_source, url)
         })
-    }
-
-    async function get_data(storage, callback, data_type, stream_source, url) {
-        fetch(`${url}${data_type}?stream_source=${stream_source}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return callback(response)
-            })
-            .then(data => {
-                storage[stream_source] = data;
-                timeout = normal_timeout;
-            })
-            .catch(e => {
-                console.log(`There has been a problem with your fetch operation: ${e.message}`);
-                timeout = error_timeout;
-            }).finally(
-                e => {
-                    setTimeout(get_data, timeout, storage, callback, data_type, stream_source, url);
-                }
-            )
     }
 
     async function get_data_ws(storage, stream_source, data_type) {
