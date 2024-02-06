@@ -27,19 +27,23 @@
         </div>
         <div style="height: 80%;" class="grid grid-cols-2 grid-rows-2 gap-2">
             <div class="overflow-hidden">
-                <img class="stream" id="image1" src="{{.url}}" alt="cam-01" width="640" height="480" hidden>
+                <img class="stream" id="image0" src="../images/cam_unavailable.jpg" alt="cam-01" width="640"
+                    height="480" hidden>
                 <canvas id="canvas" class="bg-slate-500 w-full h-full"></canvas>
             </div>
             <div class="overflow-hidden">
-                <img class="stream" id="image2" src="{{.url}}" alt="cam-02" width="640" height="480" hidden>
+                <img class="stream" id="image1" src="../images/cam_unavailable.jpg" alt="cam-02" width="640"
+                    height="480" hidden>
                 <canvas id="canvas2" class="bg-slate-500 w-full h-full"></canvas>
             </div>
             <div class="overflow-hidden">
-                <img class="stream" id="image3" src="{{.url}}" alt="cam-03" width="640" height="480" hidden>
+                <img class="stream" id="image2" src="../images/cam_unavailable.jpg" alt="cam-03" width="640"
+                    height="480" hidden>
                 <canvas id="canvas3" class="bg-slate-500 w-full h-full"></canvas>
             </div>
             <div class="overflow-hidden">
-                <img class="stream" id="image4" src="{{.url}}" alt="cam-04" width="640" height="480" hidden>
+                <img class="stream" id="image3" src="../images/cam_unavailable.jpg" alt="cam-04" width="640"
+                    height="480" hidden>
                 <canvas id="canvas4" class="bg-slate-500 w-full h-full"></canvas>
             </div>
         </div>
@@ -54,11 +58,11 @@
 </body>
 
 <script>
-    //store 4 cams box
-    boxes = [[], [], [], []]
-    images = [[], [], [], []]
-    normal_timeout = 100
-    error_timeout = 300000 //5 mins
+    var boxes = [[], [], [], []]
+    var images = [[], [], [], []]
+    const normal_timeout = 0
+    const error_timeout = 250
+    var server_availabilties = [true, true, true, true]
 
     let canvas_array = [
         document.getElementById("canvas"),
@@ -66,27 +70,18 @@
         document.getElementById("canvas3"),
         document.getElementById("canvas4"),
     ]
-
     let scale = window.devicePixelRatio
 
-    async function update_image_box(box_id, stream_source) {
-        const image = document.getElementById(box_id);
-        url = image.src;
-        get_data_ws(images, stream_source, "image");
-        get_data_ws(boxes, stream_source, "box");
-        update_image(stream_source, url);
-    }
-
-    async function update_image(stream_source, url) {
+    function update_image(stream_source) {
+        if (server_availabilties[stream_source] == false) {
+            return
+        }
         let arrayBuffer = images[stream_source];
         let urlObject = URL.createObjectURL(new Blob([arrayBuffer]));
         let image = new Image()
         image.src = urlObject
-
         let canvas = canvas_array[stream_source]
-
         let ctx = canvas.getContext('2d')
-
         image.addEventListener("load", function () {
             ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
             let box = JSON.parse(boxes[stream_source]);
@@ -106,27 +101,30 @@
                 ctx.rect(scaledX1, scaledY1, scaledWidth, scaledHeight);
                 ctx.stroke();
             }
-            setTimeout(update_image, normal_timeout, stream_source, url)
+            setTimeout(update_image, normal_timeout, stream_source)
             URL.revokeObjectURL(urlObject);
         });
 
         image.addEventListener('error', function () {
-            image.hidden = false;
             image.src = "../images/cam_unavailable.jpg";
-            setTimeout(update_image, error_timeout, stream_source, url)
+            image.hidden = false;
+            setTimeout(update_image, error_timeout, stream_source)
         })
     }
-  
-    async function get_data_ws(storage, stream_source, data_type) {
+
+    function get_data_ws(storage, stream_source, data_type) {
         const socket = new WebSocket(`ws://localhost:8007/${data_type}?stream_source=${stream_source}`);
         socket.onmessage = function (response) {
+            if (response.data == "No data available") {
+                server_availabilties[stream_source] = false;
+                throw new Error("No data available")
+            }
             storage[stream_source] = response.data;
         };
         socket.onerror = function (error) {
-            if (data_type == "image") {
-                $(".stream").attr("src", "../images/cam_unavailable.jpg");
+            if (error.message == "No data available") {
+                socket.close()
             }
-            setTimeout(get_data_ws, error_timeout, storage, stream_source, data_type);
         };
     }
 
@@ -181,45 +179,29 @@
 </script>
 
 <script>
-    // const canvas = document.getElementById("canvas"), canvas2 = document.getElementById("canvas2")
     function load_canvas(canvas) {
         const canvas_width = 1003.97 / (2552 - 224 - 288) * (innerWidth - 224 - 288)
         const canvas_height = 279.2 / 708 * innerHeight
-        //const ctx = canvas.getContext("2d"), ctx2 = canvas2.getContext("2d");
         var scale = window.devicePixelRatio;
         canvas.firstTimeResize = true
-
-        let resize_fn = create_resize_function(canvas)
-
-        resize_fn()
-
-        window.addEventListener('resize', resize_fn)
+        window.addEventListener('load', create_resize_function(canvas))
+        window.addEventListener('resize', create_resize_function(canvas))
     }
-    window.addEventListener('load', () => {
-        for (let canvas of canvas_array) {
-            load_canvas(canvas)
-        }
-        for (let i = 0; i < canvas_array.length; ++i) {
-            update_image_box(`image${i + 1}`, i)
-            // update_image_box(`image${i + 1}`, 0)
-        }
-    })
+    function update_image_box(stream_source) {
+        get_data_ws(images, stream_source, "image");
+        get_data_ws(boxes, stream_source, "box");
+        update_image(stream_source);
+    }
+    for (const [i, canvas] of canvas_array.entries()) {
+        load_canvas(canvas)
+        update_image_box(i)
+    }
 </script>
 
 <script>
     const socket = new WebSocket('ws://localhost:8574');
-    socket.onopen = function (e) {
-        console.log("[open] Connection established");
-    };
-
-    socket.addEventListener("open", (event) => {
-        console.log("Connected to server");
-    });
-
     socket.onmessage = function (event) {
         const data = JSON.parse(event.data);
-        console.log("Message from server ", data);
-
         const { camID, workplace, classType } = data;
         const notification = document.getElementById("notic-container");
 

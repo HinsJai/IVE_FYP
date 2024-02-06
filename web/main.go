@@ -149,15 +149,11 @@ func setup_db() {
 
 func setup_client_pair(cam_url string, server_url string) {
 	var err error
-	fmt.Println("123")
 	frame_conn, err = grpc.Dial(cam_url, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
-	fmt.Println("456")
 	if err != nil {
 		log.Fatalf("did not connect to FrameGetter: %v", err)
 	}
-	fmt.Println("789")
 	box_conn, err = grpc.Dial(server_url, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
-	fmt.Println("101112")
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
@@ -530,15 +526,23 @@ func reset_password_api(c *fiber.Ctx) error {
 }
 
 func image_ws(c *websocket.Conn) {
-	id, _ := strconv.Atoi(c.Query("id"))
+	id, _ := strconv.Atoi(c.Query("stream_source"))
+	if id >= len(frame_clients) {
+		c.WriteMessage(websocket.TextMessage, []byte("No data available"))
+		return
+	}
 	for {
 		c.WriteMessage(websocket.BinaryMessage, frame_data[id])
-		time.Sleep(24 * time.Millisecond)
+		time.Sleep(1 * time.Millisecond)
 	}
 }
 
 func box_ws(c *websocket.Conn) {
-	id, _ := strconv.Atoi(c.Query("id"))
+	id, _ := strconv.Atoi(c.Query("stream_source"))
+	if id >= len(box_clients) {
+		c.WriteMessage(websocket.TextMessage, []byte("No data available"))
+		return
+	}
 	for {
 		c.WriteJSON(box_data[id])
 		time.Sleep(1 * time.Millisecond)
@@ -589,7 +593,7 @@ func main() {
 	otp_dict = make(map[string]int)
 	setup_db()
 	setup_client_pair(config.cam.url, config.server.url)
-	setup_client_pair(config.cam.tim_url, config.server.tim_url)
+	// setup_client_pair(config.cam.tim_url, config.server.tim_url)
 	defer frame_conn.Close()
 	defer box_conn.Close()
 
@@ -599,10 +603,8 @@ func main() {
 
 	engine := html.New("./views", ".html")
 	engine.Reload(true)
-	// engine.Debug(true)
 	engine.Layout("embed")
 	engine.Delims("{{", "}}")
-
 	app = fiber.New(fiber.Config{
 		Views: engine,
 	})
