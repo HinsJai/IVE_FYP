@@ -71,7 +71,6 @@ class CamServer:
             ret, frame = self.__cap.read()
             if ret:
                 FRAME_QUEUE.put(frame)  # Use a queue to handle frames
-            # time.sleep(0.016)
 
     def __setup_server(self) -> None:
         add_AnalysisServicer_to_server(AnalysisService(self), self.__server)
@@ -97,8 +96,7 @@ class AnalysisService(AnalysisServicer):
         while True:
             frame = FRAME_QUEUE.get()  # Get frames from the queue
             _, buffer = cv2.imencode(".jpg", frame)
-            yield Image(data=base64.b64encode(buffer))  # Send as base64 encoded
-            # time.sleep(1 / 60)  # Control the frame rate
+            yield Image(data=base64.b64encode(buffer))
             time.sleep(1 / 24)
 
 
