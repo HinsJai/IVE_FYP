@@ -1,0 +1,17 @@
+settings_version: 0.0.4
+datasets_dir: C:\code\datasets
+weights_dir: C:\code\IVE_FYP\weights
+runs_dir: C:\code\IVE_FYP\runs
+uuid: dacd58effc27b17769db09e039a9ab4030fc6c89c55cb0ddcbaf10e36b49b639
+sync: true
+api_key: ''
+openai_api_key: ''
+clearml: true
+comet: true
+dvc: true
+hub: true
+mlflow: true
+neptune: true
+raytune: true
+tensorboard: true
+wandb: true

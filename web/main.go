@@ -8,11 +8,13 @@ import (
 	pb "ive_fyp/protos"
 	"log"
 	"math/rand"
+	"strconv"
 	"sync"
 	"time"
 
 	"github.com/mailgun/mailgun-go/v3"
 
+	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/session"
@@ -181,9 +183,7 @@ func get_image_data(wg *sync.WaitGroup, id int) {
 			log.Fatalf("error receiving from GetImage stream: %v", err)
 		}
 		decoded_data, _ := base64.StdEncoding.DecodeString(string(image.Data[:]))
-		// encoded_data:= base64.StdEncoding.EncodeToString([]byte(image.Data[:]))
 		frame_data[id] = decoded_data
-		// frame_data[id] = encoded_data
 	}
 }
 
@@ -388,23 +388,6 @@ func get_stream(c *fiber.Ctx) error {
 	})
 }
 
-func get_image(c *fiber.Ctx) error {
-	c.Set("Content-Type", "image/jpeg")
-	id := c.QueryInt("stream_source", -1)
-	if id > len(box_clients)-1 || id < 0 {
-		return fiber.ErrServiceUnavailable
-	}
-	return c.Send(frame_data[id])
-}
-
-func get_box(c *fiber.Ctx) error {
-	id := c.QueryInt("stream_source", -1)
-	if id > len(box_clients)-1 || id < 0 {
-		return fiber.ErrServiceUnavailable
-	}
-	return c.JSON(box_data[id])
-}
-
 func get_dashboard(c *fiber.Ctx) error {
 	var err error
 	sess, err = store.Get(c)
@@ -546,8 +529,24 @@ func reset_password_api(c *fiber.Ctx) error {
 	return c.JSON(map[string]bool{"success": result != nil})
 }
 
+func image_ws(c *websocket.Conn) {
+	id, _ := strconv.Atoi(c.Query("id"))
+	for {
+		c.WriteMessage(websocket.BinaryMessage, frame_data[id])
+		time.Sleep(24 * time.Millisecond)
+	}
+}
+
+func box_ws(c *websocket.Conn) {
+	id, _ := strconv.Atoi(c.Query("id"))
+	for {
+		c.WriteJSON(box_data[id])
+		time.Sleep(1 * time.Millisecond)
+	}
+}
+
 func start_server() {
-	if err := app.Listen(fmt.Sprintf(":%d", config.web.port)); err != nil {
+	if err := app.Listen(fmt.Sprintf("127.0.0.1:%d", config.web.port)); err != nil {
 		log.Fatalf("Error starting server: %v", err)
 	}
 }
@@ -563,8 +562,6 @@ func setup_get(app *fiber.App) {
 	app.Get("/", index)
 	app.Get("/logout", logout)
 	app.Get("/stream", get_stream)
-	app.Get("/image", get_image)
-	app.Get("/box", get_box)
 	app.Get("/dashboard", get_dashboard)
 	app.Get("/records", get_records)
 	app.Get("/records_api", get_records_api)
@@ -574,6 +571,8 @@ func setup_get(app *fiber.App) {
 	app.Get("/forgot_password", forgot_password)
 	app.Get("/verify_forgot_otp", verify_forgot_otp)
 	app.Get("/reset_password", reset_password)
+	app.Get("/image", websocket.New(image_ws))
+	app.Get("/box", websocket.New(box_ws))
 }
 
 func setup_post(app *fiber.App) {

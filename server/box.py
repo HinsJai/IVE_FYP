@@ -1,13 +1,13 @@
 import asyncio
 import base64
+from concurrent import futures
 import contextlib
+from math import ceil
+from queue import Queue
 import sys
 import threading
 import time
 import tomllib
-from concurrent import futures
-from math import ceil
-from queue import Queue
 from typing import Any, Self
 
 import cv2
@@ -20,13 +20,17 @@ from ultralytics import YOLO
 sys.path.extend([".."])
 
 
-from item_getter import FrameGetter
-from logger import get_logger
-from protos.proto_pb2 import (Class, Image, LogRequest, NotificationRequest,
-                              Response)
-from protos.proto_pb2_grpc import (AnalysisServicer, DiscordLogStub,
-                                   Violation_NotificationStub,
-                                   add_AnalysisServicer_to_server)
+from common.item_getter import FrameGetter
+from common.logger import get_logger
+from protos.proto_pb2 import Class
+from protos.proto_pb2 import Image
+from protos.proto_pb2 import LogRequest
+from protos.proto_pb2 import NotificationRequest
+from protos.proto_pb2 import Response
+from protos.proto_pb2_grpc import add_AnalysisServicer_to_server
+from protos.proto_pb2_grpc import AnalysisServicer
+from protos.proto_pb2_grpc import DiscordLogStub
+from protos.proto_pb2_grpc import Violation_NotificationStub
 
 with open("config.toml", "rb") as config:
     config = tomllib.load(config)
@@ -68,9 +72,11 @@ class AnalysisServer:
         self.__notification_queue: Queue[tuple[str, list[str], str]] = Queue()
         self.__dc_queue: Queue[tuple[str, bytes]] = Queue()
         self.__db_queue: Queue[list[str]] = Queue()
-        self.__dc_worker = threading.Thread(target=self.__dc_worker)
-        self.__db_worker = threading.Thread(target=self.__db_worker)
-        self.__notificaiton_worker = threading.Thread(target=self.__notificaiton_worker)
+        self.__dc_worker = threading.Thread(target=self.__dc_worker, daemon=True)
+        self.__db_worker = threading.Thread(target=self.__db_worker, daemon=True)
+        self.__notificaiton_worker = threading.Thread(
+            target=self.__notificaiton_worker, daemon=True
+        )
 
     def __enter__(self) -> Self:
         add_AnalysisServicer_to_server(AnalysisService(self), self.__server)
@@ -159,7 +165,7 @@ class AnalysisServer:
             self.__notification_queue.task_done()
 
     # store the action of the worker in queue
-    def __log(self):
+    def __log(self) -> None:
         violation_types = [
             violation
             for violation, count in self.__violation_counter.items()

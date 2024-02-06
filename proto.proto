@@ -13,15 +13,6 @@ service Violation_Notification{
     rpc notification(NotificationRequest) returns (Empty); 
 }
 
-// service TimAnalysis{
-//     rpc analysis(Empty) returns (stream TimResponse);
-//     rpc get_image(Empty) returns (stream Image);
-// }
-
-// message TimResponse{
-//     repeated Item item = 1;
-// }
-
 service DiscordLog {
     rpc log(LogRequest) returns (Empty);
 }

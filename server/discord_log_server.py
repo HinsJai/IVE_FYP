@@ -1,30 +1,39 @@
 import io
+import logging
 import sys
 import tomllib
-from typing import Any, Self
+from typing import Self
 
 import discord
-from discord import app_commands
 
 sys.path.extend([".."])
 
 import asyncio
-from dataclasses import dataclass, field
+from asyncio import AbstractEventLoop
+from dataclasses import dataclass
+from dataclasses import field
 
+from discord import app_commands
+
+from common.logger import get_logger
+from common.logger import Logger
+from common.logger import logger_handler
 from protos.proto_pb2 import Empty
-from protos.proto_pb2_grpc import (DiscordLogServicer,
-                                   add_DiscordLogServicer_to_server)
+
+from protos.proto_pb2_grpc import add_DiscordLogServicer_to_server
+from protos.proto_pb2_grpc import DiscordLogServicer
 
 try:
-    from typing import Self, override
+    from typing import override, Self
 except ImportError:
     from typing_extensions import Self, override
 
 from concurrent import futures
 
-import grpc
+logging.getLogger("discord").addHandler(logger_handler())
+logging.getLogger("discord.client").addHandler(logger_handler())
 
-# from discord.ext import commands
+import grpc
 
 with open("config.toml", "rb") as config:
     config = tomllib.load(config)
@@ -38,8 +47,6 @@ INTERACTION_USER_ID = config["discord"]["interaction_user_id"]
 
 del config
 
-# MY_GUILD = discord.Object(id=GUILD_ID)
-
 
 class MyClient(discord.Client):
     def __init__(self, *, intents: discord.Intents) -> None:
@@ -47,42 +54,27 @@ class MyClient(discord.Client):
         self.tree = app_commands.CommandTree(self)
         self.__my_guild = discord.Object(id=GUILD_ID)
 
-    async def on_message(self, message):
-        # don't respond to ourselves
-        if message.author == self.user:
-            return
-
-        if message.content == "ping":
-            await message.channel.send("pong")
-
-    async def setup_hook(self):
-        # This copies the global commands over to your guild.
+    async def setup_hook(self) -> None:
         self.tree.copy_global_to(guild=self.__my_guild)
         await self.tree.sync(guild=self.__my_guild)
 
 
 @dataclass(slots=True, repr=False)
 class DiscordBotServer:
-    # __ip: str = field(init=False)
-    # DISCORD_LOGGER_PORT: int = field(init=False)
-    # __token: str = field(init=False)
-    # guild_id: int = field(init=False)
-    # log_channel_name: str
+    loop: AbstractEventLoop = field(init=False)
     __my_guild = discord.Object(id=GUILD_ID)
     __client: MyClient = field(init=False)
     __server: grpc.server = field(init=False)
-    loop: any = field(init=False)
+    __loger: Logger = field(init=False)
 
     def __post_init__(self) -> None:
-        # self.__ip = DISCORD_LOGGER_URL
-        # self.DISCORD_LOGGER_PORT = DISCORD_LOGGER_PORT
-        # self.__token = TOKEN
         intents = discord.Intents.default()
         intents.message_content = True
         self.__client = MyClient(intents=intents)
         self.__client.event(self.on_ready)
         self.__client.tree.command(guild=self.__my_guild)(self.say)
         self.__server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+        self.__loger = get_logger("DiscordBotServer")
 
     def start(self) -> None:
         self.__server.start()
@@ -99,8 +91,9 @@ class DiscordBotServer:
 
     async def on_ready(self) -> None:
         self.loop = asyncio.get_running_loop()
-        print(f"Logged in as {self.__client.user} (ID: {self.__client.user.id})")
-        print("------")
+        self.__loger.info(
+            f"Logged in as {self.__client.user} (ID: {self.__client.user.id})"
+        )
 
     async def say(self, interaction: discord.Interaction, text_to_send: str) -> None:
         if interaction.user.id == INTERACTION_USER_ID:
@@ -117,9 +110,7 @@ class DiscordBotServer:
     async def send_log(self, log: str, image: bytes) -> None:
         guild = self.__client.get_guild(GUILD_ID)
         channel = discord.utils.get(guild.channels, name=LOG_CHANNEL)
-        # await channel.send(log)
         data = io.BytesIO(image)
-
         await channel.send(log, file=discord.File(data, "frame.png"))
 
 
@@ -129,9 +120,10 @@ class DiscordLogService(DiscordLogServicer):
         self.__server = server
 
     @override
-    def log(self, request, context) -> Empty:
+    def log(self, request, _) -> Empty:
         asyncio.run_coroutine_threadsafe(
-            self.__server.send_log(request.message, request.image.data), self.__server.loop
+            self.__server.send_log(request.message, request.image.data),
+            self.__server.loop,
         )
         return Empty()
 

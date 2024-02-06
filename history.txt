@@ -1,5 +1,8 @@
 #V2
 SELECt * FROM violation_record
 DELETE violation_record
-
 count((SELECT * FROM violation_record  WHERE 'NO_MASK' IN violation_type and   time >= time::floor(time::now(),1d)));
+DELETE FROM user
+select * from user
+INSERT INTO user {    email: 'jason199794@gmail.com',    password: crypto::argon2::generate("Aa123456"),    firstName: "Kwok Hin",    lastName: "Kong",    gender: "M",    contact: 65748125,    emergencyContact: 54125874,    emergencyFirstName: "Tai Ming",    emergencyLastName: "Kong",    emergencyPersonRelation: "Father",    position: "Admin"};
+select * from user
