@@ -533,7 +533,7 @@ func reset_password_api(c *fiber.Ctx) error {
 
 func image_ws(c *websocket.Conn) {
 	id, _ := strconv.Atoi(c.Query("stream_source"))
-	if id >= len(frame_clients) {
+	if id >= len(frame_clients) || id < 0 {
 		c.WriteMessage(websocket.TextMessage, []byte("No data available"))
 		return
 	}
@@ -545,7 +545,7 @@ func image_ws(c *websocket.Conn) {
 
 func box_ws(c *websocket.Conn) {
 	id, _ := strconv.Atoi(c.Query("stream_source"))
-	if id >= len(box_clients) {
+	if id >= len(box_clients) || id < 0 {
 		c.WriteMessage(websocket.TextMessage, []byte("No data available"))
 		return
 	}

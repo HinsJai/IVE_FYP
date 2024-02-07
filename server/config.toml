@@ -13,7 +13,6 @@ port = 8879
 url = "localhost"
 port = 8788
 
-
 [discord]
 ip = "127.0.0.1"
 port = 8575
