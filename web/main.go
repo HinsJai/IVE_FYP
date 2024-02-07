@@ -26,11 +26,12 @@ import (
 )
 
 type WebConfig struct {
-	web      WebInfo
-	cam      CamInfo
-	server   ServerInfo
-	database DatabaseInfo
-	mailgun  MailgunInfo
+	web          WebInfo
+	cam          CamInfo
+	server       ServerInfo
+	database     DatabaseInfo
+	mailgun      MailgunInfo
+	notification NotificationInfo
 }
 
 type MailgunInfo struct {
@@ -63,6 +64,10 @@ type ServerInfo struct {
 	port     int64
 	tim_url  string
 	tim_port int64
+}
+
+type NotificationInfo struct {
+	url string
 }
 
 type Box struct {
@@ -379,8 +384,9 @@ func get_stream(c *fiber.Ctx) error {
 		return c.Redirect("/?unauth=true")
 	}
 	return c.Render("stream", fiber.Map{
-		"request": c,
-		"url":     fmt.Sprintf("http://%s", config.web.url),
+		"request":                 c,
+		"web_server_url":          fmt.Sprintf(config.web.url),
+		"notification_server_url": fmt.Sprintf(config.notification.url),
 	})
 }
 
@@ -671,11 +677,16 @@ func loadConfig() WebConfig {
 		api_key: toml_data.Get("mailgun").(*toml.Tree).Get("api_key").(string),
 	}
 
+	notification_info := NotificationInfo{
+		url: toml_data.Get("notification").(*toml.Tree).Get("url").(string),
+	}
+
 	return WebConfig{
-		web:      web_info,
-		cam:      cam_info,
-		server:   server_info,
-		database: user_info,
-		mailgun:  mailgun_info,
+		web:          web_info,
+		cam:          cam_info,
+		server:       server_info,
+		database:     user_info,
+		mailgun:      mailgun_info,
+		notification: notification_info,
 	}
 }

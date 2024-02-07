@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy"
-        content="connect-src 'self' ws://localhost:8574/ {{.url}}/box 'self' ws://localhost:8007/image 'self' ws://localhost:8007/box https://ka-f.fontawesome.com;">
+        content="connect-src 'self' ws://{{.notification_server_url}}/ 'self' ws://{{.web_server_url}}/image 'self' ws://{{.web_server_url}}/box https://ka-f.fontawesome.com;">
     <title>FYP</title>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -58,6 +58,7 @@
 </body>
 
 <script>
+    const web_server_url = "{{.web_server_url}}";
     var boxes = [[], [], [], []]
     var images = [[], [], [], []]
     const normal_timeout = 0
@@ -199,9 +200,9 @@
 </script>
 
 <script>
-    const socket = new WebSocket('ws://localhost:8574');
-    socket.onmessage = function (event) {
-        const data = JSON.parse(event.data);
+    const socket = new WebSocket('ws://{{.notification_server_url}}');
+    socket.onmessage = function (message) {
+        const data = JSON.parse(message.data);
         const { camID, workplace, classType } = data;
         const notification = document.getElementById("notic-container");
 
