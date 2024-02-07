@@ -1,150 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard</title>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://kit.fontawesome.com/c30932d00b.js" crossorigin="anonymous"></script>
-    <script src="../js/function.js"></script>
+    <script
+      src="https://kit.fontawesome.com/c30932d00b.js"
+      crossorigin="anonymous"
+    ></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
+    <script src="js/common.js"></script>
+  </head>
 
-<body class="flex h-screen gap-2 bg-black">
-    <div id="side-bar" class="basis-64 bg-black px-2"></div>
-    <script>
-        $(document).ready(function () {
-            $("#side-bar").load('../navigation/side_bar.html');
-        })
-    </script>
+  <body class="flex h-screen gap-2 bg-black">
+    <div
+      id="side-bar"
+      class="basis-64 bg-black px-2"
+      data-include="navigation/side_bar"
+    ></div>
     <div class="flex-1 bg-[#222222] p-8">
-        <div style="height: 10%;" class="flex items-center justify-between text-slate-50 w-full mb-5">
-            <p class="font-bold text-4xl">Dashboard</p>
-            <p class="text-2xl">Hello, wecome back</p>
-            <div class="flex gap-3">
-                <p class="text-xl">Kwok Hin</p>
-                <i class="fa-solid fa-circle-user text-3xl"></i>
-            </div>
+      <div
+        style="height: 10%"
+        class="flex items-center justify-between text-slate-50 w-full mb-5"
+      >
+        <p class="font-bold text-4xl">Dashboard</p>
+        <p class="text-2xl">Hello, wecome back</p>
+        <div class="flex gap-3">
+          <p class="text-xl">Kwok Hin</p>
+          <i class="fa-solid fa-circle-user text-3xl"></i>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-4 gap-6 mb-6">
+        <div
+          class="bg-[#272727] flex justify-between p-5 rounded-2xl shadow-2xl"
+        >
+          <div>
+            <p class="text-green-500 text-3xl">50</p>
+            <p class="text-gray-500 text-xl">Workers <span>(today)</span></p>
+          </div>
+          <i class="fa-solid fa-user-doctor text-6xl text-green-500"></i>
         </div>
 
-        <div class="grid grid-cols-4 gap-6 mb-6">
-            <div class="bg-[#272727] flex justify-between p-5 rounded-2xl shadow-2xl">
-                <div>
-                    <p class="text-green-500 text-3xl">50</p>
-                    <p class="text-gray-500 text-xl">Workers <span>(today)</span></p>
-                </div>
-                <i class="fa-solid fa-user-doctor text-6xl text-green-500"></i>
-            </div>
-
-            <div class="bg-[#272727] flex justify-between p-5 rounded-2xl shadow-2xl">
-                <div>
-                    <p class="text-blue-500 text-3xl">1000</p>
-                    <p class="text-gray-500 text-xl">Manhours <span>(today)</span></p>
-                </div>
-                <i class="fa-solid fa-business-time text-6xl text-blue-500"></i>
-            </div>
-
-            <div class="bg-[#272727] flex justify-between p-5 rounded-2xl shadow-2xl">
-                <div>
-                    <p class="text-yellow-400 text-3xl">10</p>
-                    <p class="text-gray-500 text-xl">Warnings <span>(today)</span></p>
-                </div>
-                <i class="fa-solid fa-triangle-exclamation text-6xl text-yellow-400"></i>
-            </div>
-
-            <div class="bg-[#272727] flex justify-between p-5 rounded-2xl shadow-2xl">
-                <div>
-                    <p class="text-red-600 text-3xl">1</p>
-                    <p class="text-gray-500 text-xl">Accidents <span>(today)</span></p>
-                </div>
-                <i class="fa-solid fa-person-falling-burst text-6xl text-red-600"></i>
-            </div>
+        <div
+          class="bg-[#272727] flex justify-between p-5 rounded-2xl shadow-2xl"
+        >
+          <div>
+            <p class="text-blue-500 text-3xl">1000</p>
+            <p class="text-gray-500 text-xl">Manhours <span>(today)</span></p>
+          </div>
+          <i class="fa-solid fa-business-time text-6xl text-blue-500"></i>
         </div>
 
-        <div class="grid grid-cols-3 gap-6 border-none">
-            <div class="col-span-2 bg-[#272727] p-5 rounded-2xl shadow-2xl">
-                <p class="text-slate-50 text-center text-2xl mb-4">Warning & Accidents (past 12 months)</p>
-                <canvas id="myChart2"></canvas>
-            </div>
-            <div class="col-span-1 bg-[#272727] p-5 rounded-2xl shadow-2xl">
-                <p class="text-slate-50 text-center text-2xl mb-4">The top three most common violation</p>
-                <canvas id="myChart" class="text-slate-50"></canvas>
-            </div>
+        <div
+          class="bg-[#272727] flex justify-between p-5 rounded-2xl shadow-2xl"
+        >
+          <div>
+            <p class="text-yellow-400 text-3xl">10</p>
+            <p class="text-gray-500 text-xl">Warnings <span>(today)</span></p>
+          </div>
+          <i
+            class="fa-solid fa-triangle-exclamation text-6xl text-yellow-400"
+          ></i>
         </div>
+
+        <div
+          class="bg-[#272727] flex justify-between p-5 rounded-2xl shadow-2xl"
+        >
+          <div>
+            <p class="text-red-600 text-3xl">1</p>
+            <p class="text-gray-500 text-xl">Accidents <span>(today)</span></p>
+          </div>
+          <i class="fa-solid fa-person-falling-burst text-6xl text-red-600"></i>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-6 border-none">
+        <div class="col-span-2 bg-[#272727] p-5 rounded-2xl shadow-2xl">
+          <p class="text-slate-50 text-center text-2xl mb-4">
+            Warning & Accidents (past 12 months)
+          </p>
+          <canvas id="past 12 months"></canvas>
+        </div>
+        <div class="col-span-1 bg-[#272727] p-5 rounded-2xl shadow-2xl">
+          <p class="text-slate-50 text-center text-2xl mb-4">
+            The top three most common violation
+          </p>
+          <canvas id="common violation" class="text-slate-50"></canvas>
+        </div>
+      </div>
     </div>
-</body>
-
-<script>
-    const ctx = document.getElementById('myChart');
-
-    const image = new Image();
-    image.src = '';
-
-    const plugin = {
-        id: 'customCanvasBackgroundImage',
-        beforeDraw: (chart) => {
-            if (image.complete) {
-                const ctx = chart.ctx;
-                const { top, left, width, height } = chart.chartArea;
-                const x = left + width / 2 - image.width / 2;
-                const y = top + height / 2 - image.height / 2;
-                ctx.drawImage(image, x, y);
-            } else {
-                image.onload = () => chart.draw();
-            }
-        }
-    };
-
-    new Chart(ctx, {
-        type: 'doughnut',
-        plugins: [plugin],
-        data: {
-            labels: [
-                'No Safety Vest',
-                'No Mask',
-                'No Hardhat',
-            ], datasets: [{
-                label: 'Violation Record',
-                data: [300, 50, 100],
-                backgroundColor: [
-                    'rgb(255, 99, 132)',
-                    'rgb(54, 162, 235)',
-                    'rgb(255, 205, 86)'
-                ],
-                hoverOffset: 4
-            }]
-        }
-    });
-</script>
-
-<script>
-    const ctx2 = document.getElementById('myChart2');
-
-    new Chart(ctx2, {
-        type: 'line',
-        data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            datasets: [{
-                label: 'Num of warning',
-                data: [200, 156, 219, 129, 207, 153, 131, 28, 130, 142, 83, 68],
-                backgroundColor: 'yellow',
-                borderWidth: 2,
-                borderColor: 'yellow'
-            },
-            {
-                label: 'Num of accident',
-                data: [4, 1, 3, 8, 6, 7, 3, 3, 0, 2, 2, 3],
-                backgroundColor: 'red',
-                borderWidth: 2,
-                borderColor: 'red'
-            }]
-        },
-        options: {
-            responsive: true
-        }
-    })
-</script>
-
+  </body>
+  <script src="js/dashboard.js"></script>
 </html>

@@ -25,51 +25,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type WebConfig struct {
-	web          WebInfo
-	cam          CamInfo
-	server       ServerInfo
-	database     DatabaseInfo
-	mailgun      MailgunInfo
-	notification NotificationInfo
-}
-
-type MailgunInfo struct {
-	domain  string
-	api_key string
-}
-
-type DatabaseInfo struct {
-	url       string
-	user      string
-	password  string
-	namespace string
-	database  string
-}
-
-type WebInfo struct {
-	url  string
-	port int64
-}
-
-type CamInfo struct {
-	url      string
-	port     int64
-	tim_url  string
-	tim_port int64
-}
-
-type ServerInfo struct {
-	url      string
-	port     int64
-	tim_url  string
-	tim_port int64
-}
-
-type NotificationInfo struct {
-	url string
-}
-
 type Box struct {
 	X1        int `json:"x1"`
 	Y1        int `json:"y1"`
@@ -97,19 +52,8 @@ type NewUser struct {
 	Position                string `json:"position" xml:"position" form:"position"`
 }
 
-// type Notification struct {
-// 	CamID          string
-// 	Violation_List []string
-// 	Workplace      string
-// 	Time           string
-// }
-
 type ForgotPassword struct {
 	Email string `json:"email" xml:"email" form:"email"`
-}
-
-type ResetPasswordInfo struct {
-	NewPassword string `json:"password" xml:"password" form:"password"`
 }
 
 type VerifyOtp struct {
@@ -219,8 +163,7 @@ func index(c *fiber.Ctx) error {
 	unauthorized_message := ""
 	if c.QueryBool("error") {
 		unauthorized_message = "Invalid email or password"
-	}
-	if c.QueryBool("unauth") {
+	} else if c.QueryBool("unauth") {
 		unauthorized_message = "You must login first!!!"
 	}
 
@@ -281,12 +224,9 @@ func create_user(c *fiber.Ctx) error {
 		panic(err)
 	}
 	if sess.Get("email") == nil {
-		return c.Redirect("/?unauth=true")
+		return c.Redirect("/?unauth=true", fiber.StatusSeeOther)
 	}
-	return c.Render("create_user", fiber.Map{
-		"request": c,
-		"url":     fmt.Sprintf("http://%s", config.web.url),
-	})
+	return c.SendFile("./views/create_user.html")
 }
 
 func create_user_api(c *fiber.Ctx) error {
@@ -321,7 +261,7 @@ func get_encrypted_password(password string) []interface{} {
 		"password": password,
 	})
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 	return result.([]interface{})
 }
@@ -333,13 +273,9 @@ func get_records(c *fiber.Ctx) error {
 		panic(err)
 	}
 	if sess.Get("email") == nil {
-		return c.Redirect("/?unauth=true")
+		return c.Redirect("/?unauth=true", fiber.StatusSeeOther)
 	}
-
-	return c.Render("records", fiber.Map{
-		"request": c,
-		"url":     fmt.Sprintf("http://%s", config.web.url),
-	})
+	return c.SendFile("./views/records.html")
 }
 
 func get_records_api(c *fiber.Ctx) error {
@@ -357,12 +293,9 @@ func get_users_list(c *fiber.Ctx) error {
 		panic(err)
 	}
 	if sess.Get("email") == nil {
-		return c.Redirect("/?unauth=true")
+		return c.Redirect("/?unauth=true", fiber.StatusSeeOther)
 	}
-	return c.Render("users_list", fiber.Map{
-		"request": c,
-		"url":     fmt.Sprintf("http://%s", config.web.url),
-	})
+	return c.SendFile("./views/users_list.html")
 }
 
 func get_users_api(c *fiber.Ctx) error {
@@ -381,10 +314,9 @@ func get_stream(c *fiber.Ctx) error {
 	}
 
 	if sess.Get("email") == nil {
-		return c.Redirect("/?unauth=true")
+		return c.Redirect("/?unauth=true", fiber.StatusSeeOther)
 	}
 	return c.Render("stream", fiber.Map{
-		"request":                 c,
 		"web_server_url":          fmt.Sprintf(config.web.url),
 		"notification_server_url": fmt.Sprintf(config.notification.url),
 	})
@@ -394,16 +326,12 @@ func get_dashboard(c *fiber.Ctx) error {
 	var err error
 	sess, err = store.Get(c)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
-
 	if sess.Get("email") == nil {
-		return c.Redirect("/?unauth=true")
+		return c.Redirect("/?unauth=true", fiber.StatusSeeOther)
 	}
-	return c.Render("dashboard", fiber.Map{
-		"request": c,
-		"url":     fmt.Sprintf("http://%s", config.web.url),
-	})
+	return c.SendFile("./views/dashboard.html")
 }
 
 func logout(c *fiber.Ctx) error {
@@ -414,7 +342,7 @@ func logout(c *fiber.Ctx) error {
 	}
 
 	sess.Delete("email")
-	// Destroy session
+
 	if err = sess.Destroy(); err != nil {
 		panic(err)
 	}
@@ -423,10 +351,7 @@ func logout(c *fiber.Ctx) error {
 }
 
 func forgot_password(c *fiber.Ctx) error {
-	return c.Render("forgot_password", fiber.Map{
-		"request": c,
-		"url":     fmt.Sprintf("http://%s", config.web.url),
-	})
+	return c.SendFile("./views/forgot_password.html")
 }
 
 func verify_email_api(c *fiber.Ctx) error {
@@ -438,7 +363,7 @@ func verify_email_api(c *fiber.Ctx) error {
 	user_found := len(result.([]interface{})[0].(map[string]interface{})["result"].([]interface{})) == 1
 
 	if !user_found {
-		return c.JSON(map[string]bool{"success": false})
+		return c.SendStatus(fiber.StatusUnauthorized)
 	}
 
 	opt := rand.Intn(999999-100000) + 100000
@@ -459,23 +384,18 @@ func verify_email_api(c *fiber.Ctx) error {
 	defer cancel()
 	mg.Send(ctx, m)
 	sess.Save()
-	return c.JSON(map[string]bool{"success": true})
+	return c.SendStatus(fiber.StatusOK)
 }
 
 func verify_forgot_otp(c *fiber.Ctx) error {
-
 	sess, err := store.Get(c)
+
 	if err != nil {
 		panic(err)
 	}
 
-	approved_email := sess.Get("approved_email")
-
-	if approved_email != nil {
-		return c.Render("verify_forgot_otp", fiber.Map{
-			"request": c,
-			"url":     fmt.Sprintf("http://%s", config.web.url),
-		})
+	if sess.Get("approved_email") != nil {
+		return c.SendFile("./views/verify_forgot_otp.html")
 	}
 	return c.Redirect("/forgot_password")
 }
@@ -488,29 +408,25 @@ func verify_otp_api(c *fiber.Ctx) error {
 	otp_mutex.Lock()
 	otp := otp_dict[approved_mail]
 	otp_mutex.Unlock()
-	success := otp == sender_otp.OTP
-	if success {
+	if otp == sender_otp.OTP {
 		delete(otp_dict, approved_mail)
+		return c.SendStatus(fiber.StatusOK)
 	}
-	return c.JSON(map[string]bool{"success": success})
+	return c.SendStatus(fiber.StatusUnauthorized)
 }
 
 func reset_password(c *fiber.Ctx) error {
-
 	sess, err := store.Get(c)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 
 	if sess.Get("approved_email") == nil {
 		return c.Redirect("/forgot_password")
 	}
 
-	return c.Render("reset_password", fiber.Map{
-		"request": c,
-		"url":     fmt.Sprintf("http://%s", config.web.url),
-	})
+	return c.SendFile("./views/reset_password.html")
 }
 
 func reset_password_api(c *fiber.Ctx) error {
@@ -527,8 +443,9 @@ func reset_password_api(c *fiber.Ctx) error {
 	if result != nil {
 		sess.Delete("approved_email")
 		sess.Save()
+		return c.SendStatus(fiber.StatusOK)
 	}
-	return c.JSON(map[string]bool{"success": result != nil})
+	return c.SendStatus(fiber.StatusUnauthorized)
 }
 
 func image_ws(c *websocket.Conn) {
@@ -563,7 +480,7 @@ func start_server() {
 
 func setup_static(app *fiber.App) {
 	app.Static("/images", "./images")
-	app.Static("/navigation", "./navigation")
+	app.Static("/navigation", "./views/navigation")
 	app.Static("/js", "./js")
 	app.Static("/css", "./css")
 }
@@ -638,6 +555,55 @@ func main() {
 		go get_box_data(&wg, i)
 	}
 	wg.Wait()
+}
+
+type WebConfig struct {
+	web          WebInfo
+	cam          CamInfo
+	server       ServerInfo
+	database     DatabaseInfo
+	mailgun      MailgunInfo
+	notification NotificationInfo
+}
+
+type MailgunInfo struct {
+	domain  string
+	api_key string
+}
+
+type DatabaseInfo struct {
+	url       string
+	user      string
+	password  string
+	namespace string
+	database  string
+}
+
+type WebInfo struct {
+	url  string
+	port int64
+}
+
+type CamInfo struct {
+	url      string
+	port     int64
+	tim_url  string
+	tim_port int64
+}
+
+type ServerInfo struct {
+	url      string
+	port     int64
+	tim_url  string
+	tim_port int64
+}
+
+type NotificationInfo struct {
+	url string
+}
+
+type ResetPasswordInfo struct {
+	NewPassword string `json:"password" xml:"password" form:"password"`
 }
 
 // get the toml config

@@ -1,70 +1,104 @@
 <!DOCTYPE html>
 <html>
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy"
-        content="connect-src 'self' ws://{{.notification_server_url}}/ 'self' ws://{{.web_server_url}}/image 'self' ws://{{.web_server_url}}/box https://ka-f.fontawesome.com;">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="connect-src 'self' ws://{{.notification_server_url}}/ 'self' ws://{{.web_server_url}}/image 'self' ws://{{.web_server_url}}/box https://ka-f.fontawesome.com;"
+    />
     <title>FYP</title>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://kit.fontawesome.com/c30932d00b.js" crossorigin="anonymous"></script>
-    <script src="../js/function.js"></script>
-    <script src="../js/stream.js"></script>
-</head>
+    <script
+      src="https://kit.fontawesome.com/c30932d00b.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="js/common.js"></script>
+    <script src="js/stream.js"></script>
+  </head>
 
-<body class="flex h-screen gap-2 bg-black">
-    <div id="side-bar" class="basis-64 bg-black px-2"></div>
+  <body class="flex h-screen gap-2 bg-black">
+    <div
+      id="side-bar"
+      class="basis-64 bg-black px-2"
+      data-include="navigation/side_bar"
+    ></div>
     <div class="flex-1">
-        <div style="height: 10%;" class="bg-[#222222] text-slate-50 flex items-center pl-6">
-            <span class="text-xl mr-5">Default </span>
-            <i class="fa-solid fa-plus text-xl hover:bg-[#FFBE00] px-2 py-1 rounded-md cursor-pointer"></i>
+      <div
+        style="height: 10%"
+        class="bg-[#222222] text-slate-50 flex items-center pl-6"
+      >
+        <span class="text-xl mr-5">Default </span>
+        <i
+          class="fa-solid fa-plus text-xl hover:bg-[#FFBE00] px-2 py-1 rounded-md cursor-pointer"
+        ></i>
+      </div>
+      <div style="height: 80%" class="grid grid-cols-2 grid-rows-2 gap-2">
+        <div class="overflow-hidden">
+          <img
+            id="cam placeholder 0"
+            src="../images/cam_unavailable.jpg"
+            alt="cam-01"
+            width="640"
+            height="480"
+            style="width: 100%; height: 100%"
+            hidden
+          />
+          <canvas id="canvas 0" class="bg-slate-500 w-full h-full"></canvas>
         </div>
-        <div style="height: 80%;" class="grid grid-cols-2 grid-rows-2 gap-2">
-            <div class="overflow-hidden">
-                <img id="cam placeholder 0" src="../images/cam_unavailable.jpg" alt="cam-01" width="640" height="480"
-                    style="width: 100%; height: 100%;" hidden>
-                <canvas id="canvas 0" class="bg-slate-500 w-full h-full"></canvas>
-            </div>
-            <div class="overflow-hidden">
-                <img id="cam placeholder 1" src="../images/cam_unavailable.jpg" alt="cam-02" width="640" height="480"
-                    style="width: 100%; height: 100%;" hidden>
-                <canvas id="canvas 1" class="bg-slate-500 w-full h-full"></canvas>
-            </div>
-            <div class="overflow-hidden">
-                <img id="cam placeholder 2" src="../images/cam_unavailable.jpg" alt="cam-03" width="640" height="480"
-                    style="width: 100%; height: 100%;" hidden>
-                <canvas id="canvas 2" class="bg-slate-500 w-full h-full"></canvas>
-            </div>
-            <div class="overflow-hidden">
-                <img id="cam placeholder 3" src="../images/cam_unavailable.jpg" alt="cam-04" width="640" height="480"
-                    style="width: 100%; height: 100%;" hidden>
-                <canvas id="canvas 3" class="bg-slate-500 w-full h-full"></canvas>
-            </div>
+        <div class="overflow-hidden">
+          <img
+            id="cam placeholder 1"
+            src="../images/cam_unavailable.jpg"
+            alt="cam-02"
+            width="640"
+            height="480"
+            style="width: 100%; height: 100%"
+            hidden
+          />
+          <canvas id="canvas 1" class="bg-slate-500 w-full h-full"></canvas>
         </div>
-        <div style="height: 10%;" class="bg-[#222222]">
+        <div class="overflow-hidden">
+          <img
+            id="cam placeholder 2"
+            src="../images/cam_unavailable.jpg"
+            alt="cam-03"
+            width="640"
+            height="480"
+            style="width: 100%; height: 100%"
+            hidden
+          />
+          <canvas id="canvas 2" class="bg-slate-500 w-full h-full"></canvas>
         </div>
+        <div class="overflow-hidden">
+          <img
+            id="cam placeholder 3"
+            src="../images/cam_unavailable.jpg"
+            alt="cam-04"
+            width="640"
+            height="480"
+            style="width: 100%; height: 100%"
+            hidden
+          />
+          <canvas id="canvas 3" class="bg-slate-500 w-full h-full"></canvas>
+        </div>
+      </div>
+      <div style="height: 10%" class="bg-[#222222]"></div>
     </div>
     <div class="basis-72 px-3 py-7">
-        <div style="height: 7%;" class="relative text-center justify-center">
-            <p class="text-slate-50 text-2xl">Notification</p>
-        </div>
-        <div style="height:83%" class="overflow-hidden" id="notic-container"></div>
-</body>
+      <div style="height: 7%" class="relative text-center justify-center">
+        <p class="text-slate-50 text-2xl">Notification</p>
+      </div>
+    </div>
+    <div style="height: 83%" class="overflow-hidden" id="notic-container"></div>
+  </body>
+</html>
 
 <script>
-    var canvas_array = []
-    for (let i = 0; i < 4; ++i) {
-        canvas_array.push(document.getElementById(`canvas ${i}`))
-    }
-
-    for (const [i, canvas] of canvas_array.entries()) {
-        load_canvas(canvas)
-        setup_images_box(i, "{{.web_server_url}}")
-    }
-    load_sidebar();
-    get_notification("{{.notification_server_url}}");
+  for (let i = 0; i < 4; ++i) {
+    load_canvas(i);
+    setup_images_box(i, "{{.web_server_url}}");
+  }
+  get_notification("{{.notification_server_url}}");
 </script>
-
-</html>

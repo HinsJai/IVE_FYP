@@ -1,0 +1,59 @@
+<div style="height: 90%">
+  <div class="flex justify-start p-6 mb-5 gap-2">
+    <img src="../images/logo2.png" class="w-12" />
+    <span class="text-4xl font-bold text-[#FFBE00] mt-2">COS</span>
+  </div>
+  <a
+    href="/dashboard"
+    class="flex text-slate-50 gap-5 text-xl p-4 rounded-lg mb-3 duration-300 hover:bg-blue-600"
+  >
+    <i class="fa-solid fa-table-columns pt-1"></i>
+    <span class="uppercase">Dashboard</span>
+  </a>
+  <a
+    href="/stream"
+    class="flex text-slate-50 gap-5 text-xl p-4 rounded-lg mb-3 duration-300 hover:bg-blue-600"
+  >
+    <i class="fa-brands fa-watchman-monitoring pt-1"></i>
+    <span class="uppercase">Surveillance</span>
+  </a>
+  <a
+    href="/records"
+    class="flex text-slate-50 gap-5 text-xl p-4 rounded-lg mb-3 duration-300 hover:bg-blue-600"
+  >
+    <i class="fa-solid fa-microchip pt-1"></i>
+    <span class="uppercase">Log history</span>
+  </a>
+  <a
+    href="#"
+    class="flex justify-between text-slate-50 gap-6 text-xl p-4 rounded-lg mb-1 duration-300 hover:bg-blue-600"
+    onclick="dropdown()"
+  >
+    <i class="fa-solid fa-file pt-1"></i>
+    <span class="uppercase">Management</span>
+    <i class="fa-solid fa-chevron-up pt-1" id="drop-down-icon"></i>
+  </a>
+  <div id="drop-down-area">
+    <a
+      href="/users_list"
+      class="text-slate-50 text-xl flex p-2 pl-14 mb-2 rounded-lg hover:bg-gray-700"
+    >
+      <span>User List</span>
+    </a>
+    <a
+      href="/create_user"
+      class="text-slate-50 text-xl flex p-2 pl-14 mb-2 rounded-lg hover:bg-gray-700"
+    >
+      <span>Create User</span>
+    </a>
+  </div>
+</div>
+<div style="height: 10%" class="flex justify-center items-center">
+  <button
+    class="text-slate-50 uppercase text-xl w-full p-4 rounded-lg duration-300 hover:bg-red-700"
+    onclick="logout()"
+  >
+    <i class="fa-solid fa-right-from-bracket pr-5"></i>
+    log out
+  </button>
+</div>
