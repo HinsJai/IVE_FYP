@@ -5,4 +5,4 @@
 **/video
 /db_data
 *.sh
-!spec/*.sh
+*/*.sh
