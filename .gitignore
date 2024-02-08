@@ -1,8 +1,8 @@
 /video
 /__pycache__
-/web/__pycache__
-/client/__pycache__
-/protos/__pycache__
+**/__pycache__
 /venv
 **/video
 /db_data
+*.sh
+!spec/*.sh

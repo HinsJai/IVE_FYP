@@ -15,9 +15,9 @@ function get_notification(url) {
     const newNotification = document.createElement("div");
 
     newNotification.innerHTML = `<p class="text-red-500 font-semibold">CamID:<span class="text-slate-50 font-semibold"> ${camID}</span></p><br>
-        <p class="text-red-500 font-semibold">Workplace:<span class="text-slate-50 font-semibold"> ${workplace}</span></p><br>
-        <p class="text-red-500 font-semibold">Violation:<span class="text-slate-50 font-semibold"> ${classType}</span></p><br>
-        <hr class="mb-2">`;
+      <p class="text-red-500 font-semibold">Workplace:<span class="text-slate-50 font-semibold"> ${workplace}</span></p><br>
+      <p class="text-red-500 font-semibold">Violation:<p class="text-slate-50 font-semibold"> ${classType}</p></p><br>
+      <hr class="mb-2">`;
 
     notification.insertBefore(newNotification, notification.firstChild);
 
