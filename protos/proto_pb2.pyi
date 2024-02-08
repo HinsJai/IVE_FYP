@@ -2,7 +2,13 @@ from google.protobuf.internal import containers as _containers
 from google.protobuf.internal import enum_type_wrapper as _enum_type_wrapper
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Mapping, Optional as _Optional, Union as _Union
+from typing import (
+    ClassVar as _ClassVar,
+    Iterable as _Iterable,
+    Mapping as _Mapping,
+    Optional as _Optional,
+    Union as _Union,
+)
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
@@ -18,6 +24,7 @@ class Class(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     SAFETY_VEST: _ClassVar[Class]
     MACHINERY: _ClassVar[Class]
     VEHICLE: _ClassVar[Class]
+
 HARDHAT: Class
 MASK: Class
 NO_HARDHAT: Class
@@ -51,13 +58,22 @@ class Item(_message.Message):
     x2: int
     y2: int
     class_type: Class
-    def __init__(self, x1: _Optional[int] = ..., y1: _Optional[int] = ..., x2: _Optional[int] = ..., y2: _Optional[int] = ..., class_type: _Optional[_Union[Class, str]] = ...) -> None: ...
+    def __init__(
+        self,
+        x1: _Optional[int] = ...,
+        y1: _Optional[int] = ...,
+        x2: _Optional[int] = ...,
+        y2: _Optional[int] = ...,
+        class_type: _Optional[_Union[Class, str]] = ...,
+    ) -> None: ...
 
 class Response(_message.Message):
     __slots__ = ["item"]
     ITEM_FIELD_NUMBER: _ClassVar[int]
     item: _containers.RepeatedCompositeFieldContainer[Item]
-    def __init__(self, item: _Optional[_Iterable[_Union[Item, _Mapping]]] = ...) -> None: ...
+    def __init__(
+        self, item: _Optional[_Iterable[_Union[Item, _Mapping]]] = ...
+    ) -> None: ...
 
 class LogRequest(_message.Message):
     __slots__ = ["message", "image"]
@@ -65,7 +81,11 @@ class LogRequest(_message.Message):
     IMAGE_FIELD_NUMBER: _ClassVar[int]
     message: str
     image: Image
-    def __init__(self, message: _Optional[str] = ..., image: _Optional[_Union[Image, _Mapping]] = ...) -> None: ...
+    def __init__(
+        self,
+        message: _Optional[str] = ...,
+        image: _Optional[_Union[Image, _Mapping]] = ...,
+    ) -> None: ...
 
 class NotificationRequest(_message.Message):
     __slots__ = ["camID", "class_type", "workplace"]
@@ -75,4 +95,9 @@ class NotificationRequest(_message.Message):
     camID: str
     class_type: _containers.RepeatedScalarFieldContainer[Class]
     workplace: str
-    def __init__(self, camID: _Optional[str] = ..., class_type: _Optional[_Iterable[_Union[Class, str]]] = ..., workplace: _Optional[str] = ...) -> None: ...
+    def __init__(
+        self,
+        camID: _Optional[str] = ...,
+        class_type: _Optional[_Iterable[_Union[Class, str]]] = ...,
+        workplace: _Optional[str] = ...,
+    ) -> None: ...
