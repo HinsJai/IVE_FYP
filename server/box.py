@@ -1,17 +1,18 @@
 import asyncio
 import base64
-from concurrent import futures
 import contextlib
-from math import ceil
-from queue import Queue
 import sys
 import threading
 import time
 import tomllib
+from concurrent import futures
+from math import ceil
+from queue import Queue
 from typing import Any, Self
 
 import cv2
 import grpc
+import joblib
 import numpy as np
 from surrealdb import Surreal
 from typing_extensions import override
@@ -22,15 +23,11 @@ sys.path.extend([".."])
 
 from common.item_getter import FrameGetter
 from common.logger import get_logger
-from protos.proto_pb2 import Class
-from protos.proto_pb2 import Image
-from protos.proto_pb2 import LogRequest
-from protos.proto_pb2 import NotificationRequest
-from protos.proto_pb2 import Response
-from protos.proto_pb2_grpc import add_AnalysisServicer_to_server
-from protos.proto_pb2_grpc import AnalysisServicer
-from protos.proto_pb2_grpc import DiscordLogStub
-from protos.proto_pb2_grpc import Violation_NotificationStub
+from protos.proto_pb2 import (Class, Image, LogRequest, NotificationRequest,
+                              Response)
+from protos.proto_pb2_grpc import (AnalysisServicer, DiscordLogStub,
+                                   Violation_NotificationStub,
+                                   add_AnalysisServicer_to_server)
 
 with open("config.toml", "rb") as config:
     config = tomllib.load(config)
@@ -52,12 +49,23 @@ GRPC_NOTIFICATION_URL = config["grpc_notification"]["url"]
 del config
 
 
+def image_to_histogram(image, bins=32):
+    histogram = []
+    for i in range(3):  # Assuming the image is in BGR format
+        hist = cv2.calcHist([image], [i], None, [bins], [0, 256])
+        histogram.extend(hist.flatten())
+    return histogram
+
+
 class AnalysisServer:
     def __init__(self) -> None:
         self.__logger = get_logger("Model Server")
         self.__server = grpc.server(futures.ThreadPoolExecutor())
         self.__frame_getter = FrameGetter(CAM_URL, CAM_PORT)
-        self.__model = YOLO("../model/best_ppe.pt")
+        self.__model = YOLO("../model/best_100.pt")
+        self.__helmet_model, self.__label_encoder = joblib.load(
+            "../model/helmet_color_cls.pkl", mmap_mode="r"
+        )
         self.__reset_counter()
         self.__logger_channel = grpc.insecure_channel(
             f"{DISCORD_LOGGER_URL}:{DISCORD_LOGGER_PORT}"
@@ -179,6 +187,16 @@ class AnalysisServer:
         self.__dc_queue.put(dc_pair)
         self.__notification_queue.put(("c001", violation_types, "TY-IVE"))
         self.__reset_counter()
+    
+    def __colored_helmet(self, x1:int, y1:int, x2:int, y2:int) -> int:
+        helmet_image = self.frame[y1:y2, x1:x2]
+        # print(helmet_image)
+        # if len(helmet_image) == 0:
+        #     breakpoint()
+        histogram = image_to_histogram(helmet_image)
+        prediction = self.__helmet_model.predict([histogram])
+        predicted_label = self.__label_encoder.inverse_transform(prediction)
+        return int(10 + predicted_label[0])
 
     @property
     def boxes(self) -> list[dict[str, int]] | None:
@@ -188,21 +206,54 @@ class AnalysisServer:
         if not (result := self.__model.predict(self.frame, verbose=False)):
             return None
 
+        # img = cv2.resize(img, (resize_width, resize_height))
+        # results = model.predict(img, conf=conf, verbose=False)
+        # names = results[0].names
+        # class_detections_values = []
+        # for k, v in names.items():
+        #     class_detections_values.append(results[0].boxes.cls.tolist().count(k))
+        # # create dictionary of objects detected per class
+        # classes_detected = dict(zip(names.values(), class_detections_values))
+        #  f"Total Person: {classes_detected['Person']}",
+        # person_count = 0
+
         boxes = []
         for box in result[0].boxes:
-            if time.time() - self.__time_s >= 15 and int(box.cls[0]) in {2, 3, 4}:
-                _type = Class.Name(int(box.cls[0]))
-                self.__violation_counter[_type] += 1
-                self.__count += 1
+            # if time.time() - self.__time_s >= 15 and int(box.cls[0]) in {2, 3, 4}:
+            #     _type = Class.Name(int(box.cls[0]))
+            #     self.__violation_counter[_type] += 1
+            #     self.__count += 1
 
-            if ceil((box.conf[0] * 100)) > 0.5 * 100:
+            if ceil((box.conf[0])) > 0.5:
+
+                x1, y1, x2, y2 = tuple(map(int, box.xyxy[0]))
+
+                class_type = int(box.cls[0])
+
+                if time.time() - self.__time_s >= 15 and class_type in {2, 3, 4}:
+                    _type = Class.Name(class_type)
+                    self.__violation_counter[_type] += 1
+                    self.__count += 1
+
+                # if class_type == 0:
+                #     helmet_image = self.frame[y1:y2][x1:x2]
+                #     histogram = image_to_histogram(helmet_image)
+                #     prediction = self.__helmet_model.predict([histogram])
+                #     predicted_label = self.__label_encoder.inverse_transform(prediction)
+                #     class_type = 10 + predicted_label
+                    
                 boxes.append(
                     {
-                        "x1": int(box.xyxy[0][0]),
-                        "y1": int(box.xyxy[0][1]),
-                        "x2": int(box.xyxy[0][2]),
-                        "y2": int(box.xyxy[0][3]),
-                        "class_type": int(box.cls[0]),
+                        "x1": x1,
+                        "y1": y1,
+                        "x2": x2,
+                        "y2": y2,
+                        # "x1": int(box.xyxy[0][0]),
+                        # "y1": int(box.xyxy[0][1]),
+                        # "x2": int(box.xyxy[0][2]),
+                        # "y2": int(box.xyxy[0][3]),
+                        # "class_type": int(box.cls[0]),
+                        "class_type": self.__colored_helmet(x1, y1, x2, y2) if class_type == 0 else class_type,
                     }
                 )
 

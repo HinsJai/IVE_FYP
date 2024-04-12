@@ -1,5 +1,6 @@
 var boxes = [[], [], [], []];
 var images = [[], [], [], []];
+var person_count = [0, 0, 0, 0];
 var server_availabilties = [true, true, true, true];
 const normal_timeout = 0;
 const error_timeout = 250;
@@ -14,10 +15,35 @@ function get_notification(url) {
     const notification = document.getElementById("notic-container");
     const newNotification = document.createElement("div");
 
-    newNotification.innerHTML = `<p class="text-red-500 font-semibold">CamID:<span class="text-slate-50 font-semibold"> ${camID}</span></p><br>
-      <p class="text-red-500 font-semibold">Workplace:<span class="text-slate-50 font-semibold"> ${workplace}</span></p><br>
-      <p class="text-red-500 font-semibold">Violation:<p class="text-slate-50 font-semibold"> ${classType}</p></p><br>
-      <hr class="mb-2">`;
+    // newNotification.innerHTML = `<p class="text-red-500 font-semibold">CamID:<span class="text-slate-50 font-semibold"> ${camID}</span></p><br>
+    //   <p class="text-red-500 font-semibold">Workplace:<span class="text-slate-50 font-semibold"> ${workplace}</span></p><br>
+    //   <p class="text-red-500 font-semibold">Violation:<p class="text-slate-50 font-semibold"> ${classType}</p></p><br>
+    //   <hr class="mb-2">`;
+
+    newNotification.innerHTML =
+      `<div
+    class="relative flex w-full p-3 text-base text-gray-900 border border-white-900 rounded-lg font-regular mb-2"
+    style="opacity: 1;">
+    <div class="shrink-0 text-white">
+        <i class="fa-solid fa-circle-exclamation"></i>
+    </div>
+    <div class="ml-3">
+        <p class="block text-white font-sans text-base antialiased font-medium leading-relaxed text-inherit">
+            New violation detected
+        </p>
+        <ul class="mt-2 ml-2 list-disc list-inside">
+            <li class="text-red-500 font-semibold">
+                CamID : <span class="text-slate-50 font-semibold">${camID}</span>
+            </li>
+            <li class="text-red-500 font-semibold">
+                Workplace : <span class="text-slate-50 font-semibold">${workplace}</span>
+            </li>
+            <li class="text-red-500 font-semibold">
+                Violation : <span class="text-slate-50 font-semibold">${classType}</span>
+            </li>
+        </ul>
+    </div>
+</div>`
 
     notification.insertBefore(newNotification, notification.firstChild);
 
@@ -92,7 +118,13 @@ function update_image(stream_source) {
   let ctx = canvas.getContext("2d");
   image.addEventListener("load", function () {
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    person_count[stream_source] = 0;
     let box = JSON.parse(boxes[stream_source]);
+    for (let i = 0; i < box.length; ++i) {
+      if (box[i].class_type == 5) {
+        person_count[stream_source] += 1;
+      }
+    }
     for (let i = 0; i < box.length; ++i) {
       const scaledX1 = box[i].x1 * (canvas.width / image.width);
       const scaledY1 = box[i].y1 * (canvas.height / image.height);
@@ -111,6 +143,16 @@ function update_image(stream_source) {
       ctx.rect(scaledX1, scaledY1, scaledWidth, scaledHeight);
       ctx.stroke();
     }
+
+
+
+    ctx.beginPath();
+    ctx.fillStyle = "green";
+    ctx.font = "lighter 24px Arial";
+    ctx.fillText(`Person Count: ${person_count[stream_source]}`, 10, 20);
+    ctx.fill();
+    ctx.stroke();
+
     setTimeout(update_image, normal_timeout, stream_source);
     URL.revokeObjectURL(urlObject);
   });
@@ -124,9 +166,13 @@ function update_image(stream_source) {
 
 function getBoxColor(class_type) {
   switch (class_type) {
-    case 0:
+    // case 0:
     case 1:
     case 7:
+    case 10:
+    case 11:
+    case 12:
+    case 13:
       return "green";
     case 2:
     case 3:
@@ -138,7 +184,7 @@ function getBoxColor(class_type) {
 }
 
 const classEnum = {
-  0: "Hardhat",
+  // 0: "Hardhat",
   1: "Mask",
   2: "No Hardhat",
   3: "No Mask",
@@ -148,6 +194,10 @@ const classEnum = {
   7: "Safety Vest",
   8: "Machinery",
   9: "Vehicle",
+  10: "Blue Hardhat",
+  11: "Orange Hardhat",
+  12: "White Hardhat",
+  13: "Yellow Hardhat",
 };
 
 function getClass(class_type) {
