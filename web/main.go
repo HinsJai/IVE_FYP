@@ -89,10 +89,10 @@ func setup_db() {
 		"user": config.database.user,
 		"pass": config.database.password,
 	}); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	if _, err = db.Use(config.database.namespace, config.database.database); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 }
 
@@ -169,7 +169,7 @@ func index(c *fiber.Ctx) error {
 
 	sess, err = store.Get(c)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	email := sess.Get("email")
@@ -195,19 +195,19 @@ func login(c *fiber.Ctx) error {
 	})
 	user_found := len(result.([]interface{})[0].(map[string]interface{})["result"].([]interface{})) == 1
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	if user_found {
 
 		sess, err = store.Get(c)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 
 		sess.Set("email", user.Email)
 
 		if err = sess.Save(); err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 
 		sess.Delete("approved_email")
@@ -221,7 +221,7 @@ func create_user(c *fiber.Ctx) error {
 	var err error
 	sess, err = store.Get(c)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	if sess.Get("email") == nil {
 		return c.Redirect("/?unauth=true", fiber.StatusSeeOther)
@@ -237,7 +237,7 @@ func create_user_api(c *fiber.Ctx) error {
 	}
 	encrypted_pass := get_encrypted_password(new_user.Password)[0].(map[string]interface{})["result"].(string)
 
-	result, _ := db.Create("user", map[string]interface{}{
+	create_user_result, _ := db.Create("user", map[string]interface{}{
 		"email":                   new_user.Email,
 		"password":                encrypted_pass,
 		"firstName":               new_user.FirstName,
@@ -250,10 +250,24 @@ func create_user_api(c *fiber.Ctx) error {
 		"emergencyLastName":       new_user.EmergencyLastName,
 		"emergencyPersonRelation": new_user.EmergencyPersonRelation,
 	})
-	if result != nil {
+
+	setProfileResult, _ := db.Create("setting", map[string]interface{}{
+		"email": new_user.Email,
+	})
+
+	setHardhatRoleResult, _ := db.Create("hardhatRole", map[string]interface{}{
+		"email": new_user.Email,
+	})
+
+	if create_user_result != nil && setProfileResult != nil && setHardhatRoleResult != nil {
 		return c.Redirect("/create_user")
 	}
-	return c.JSON(result)
+
+	// if setProfileResult != nil {
+	// 	return c.Redirect("/create_user")
+	// }
+
+	return c.JSON(setProfileResult)
 }
 
 func get_encrypted_password(password string) []interface{} {
@@ -270,7 +284,7 @@ func get_records(c *fiber.Ctx) error {
 	var err error
 	sess, err = store.Get(c)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	if sess.Get("email") == nil {
 		return c.Redirect("/?unauth=true", fiber.StatusSeeOther)
@@ -290,7 +304,7 @@ func get_users_list(c *fiber.Ctx) error {
 	var err error
 	sess, err = store.Get(c)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	if sess.Get("email") == nil {
 		return c.Redirect("/?unauth=true", fiber.StatusSeeOther)
@@ -299,10 +313,23 @@ func get_users_list(c *fiber.Ctx) error {
 }
 
 func get_users_api(c *fiber.Ctx) error {
+
+	var err error
+	sess, err = store.Get(c)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if sess.Get("email") == nil {
+		return c.SendStatus(fiber.StatusUnauthorized)
+	}
+
 	result, err := db.Query("SELECT * FROM user;", map[string]string{})
 	if err != nil {
-		return c.SendString(fmt.Sprintf("Error: %v", err))
+		log.Fatal(err)
 	}
+	// if err != nil {
+	// 	return c.SendString(fmt.Sprintf("Error: %v", err))
+	// }
 	return c.JSON(result)
 }
 
@@ -310,7 +337,7 @@ func get_stream(c *fiber.Ctx) error {
 	var err error
 	sess, err = store.Get(c)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	if sess.Get("email") == nil {
@@ -334,17 +361,29 @@ func get_dashboard(c *fiber.Ctx) error {
 	return c.SendFile("./views/dashboard.html")
 }
 
+func get_setting(c *fiber.Ctx) error {
+	var err error
+	sess, err = store.Get(c)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if sess.Get("email") == nil {
+		return c.Redirect("/?unauth=true", fiber.StatusSeeOther)
+	}
+	return c.SendFile("./views/setting.html")
+}
+
 func logout(c *fiber.Ctx) error {
 	var err error
 	sess, err = store.Get(c)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	sess.Delete("email")
 
 	if err = sess.Destroy(); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	return c.Redirect("/")
@@ -391,7 +430,7 @@ func verify_forgot_otp(c *fiber.Ctx) error {
 	sess, err := store.Get(c)
 
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	if sess.Get("approved_email") != nil {
@@ -448,6 +487,93 @@ func reset_password_api(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusUnauthorized)
 }
 
+func get_helment_role(c *fiber.Ctx) error {
+	var err error
+	sess, err = store.Get(c)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if sess.Get("email") == nil {
+		return c.Redirect("/?unauth=true", fiber.StatusSeeOther)
+	}
+	result, _ := db.Query("SELECT * FROM hardhatRole where email = $email", map[string]string{
+		"email": sess.Get("email").(string),
+	})
+	if result != nil {
+		return c.JSON(result)
+	}
+	return c.SendStatus(fiber.StatusBadRequest)
+}
+
+func get_user_profile_setting_api(c *fiber.Ctx) error {
+	var err error
+	sess, err = store.Get(c)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if sess.Get("email") == nil {
+		return c.SendStatus(fiber.StatusUnauthorized)
+	}
+
+	result, _ := db.Query("SELECT profileSetting FROM setting where email = $email", map[string]string{
+		"email": sess.Get("email").(string),
+	})
+	if result != nil {
+		return c.JSON(result)
+	}
+	return c.SendStatus(fiber.StatusUnauthorized)
+}
+
+func set_user_profile_helment_role_api(c *fiber.Ctx) error {
+	var err error
+	sess, err = store.Get(c)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if sess.Get("email") == nil {
+		return c.SendStatus(fiber.StatusUnauthorized)
+	}
+
+	helment_role := map[int]interface{}{}
+	if err = c.BodyParser(&helment_role); err != nil {
+		return err
+	}
+
+	result, _ := db.Query("Update hardhatRole set role =$role where email = $email", map[string]interface{}{
+		"email": sess.Get("email").(string),
+		"role":  helment_role,
+	})
+	if result != nil {
+		return c.SendStatus(fiber.StatusOK)
+	}
+	return c.SendStatus(fiber.StatusUnauthorized)
+}
+
+func set_user_profile_setting_api(c *fiber.Ctx) error {
+	var err error
+	sess, err = store.Get(c)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if sess.Get("email") == nil {
+		return c.SendStatus(fiber.StatusUnauthorized)
+	}
+
+	user_profile_setting := map[string]interface{}{}
+	if err = c.BodyParser(&user_profile_setting); err != nil {
+		return err
+	}
+
+	result, _ := db.Query("Update setting set profileSetting =$profile where email = $email", map[string]interface{}{
+		"email":   sess.Get("email").(string),
+		"profile": user_profile_setting["data"],
+	})
+	if result != nil {
+		return c.SendStatus(fiber.StatusOK)
+	}
+	return c.SendStatus(fiber.StatusBadRequest)
+}
+
 func image_ws(c *websocket.Conn) {
 	id, _ := strconv.Atoi(c.Query("stream_source"))
 	if id >= len(frame_clients) || id < 0 {
@@ -495,11 +621,14 @@ func setup_get(app *fiber.App) {
 	app.Get("/create_user", create_user)
 	app.Get("/users_list", get_users_list)
 	app.Get("/users_list_api", get_users_api)
+	app.Get("/get_setting_profile_api", get_user_profile_setting_api)
+	app.Get("/setting", get_setting)
 	app.Get("/forgot_password", forgot_password)
 	app.Get("/verify_forgot_otp", verify_forgot_otp)
 	app.Get("/reset_password", reset_password)
 	app.Get("/image", websocket.New(image_ws))
 	app.Get("/box", websocket.New(box_ws))
+	app.Get("/get_helment_roles", get_helment_role)
 }
 
 func setup_post(app *fiber.App) {
@@ -508,6 +637,9 @@ func setup_post(app *fiber.App) {
 	app.Post("/verify_email_api", verify_email_api)
 	app.Post("/verify_otp_api", verify_otp_api)
 	app.Post("/reset_password_api", reset_password_api)
+	app.Post("/set_setting_profile_api", set_user_profile_setting_api)
+	app.Post("/set_helment_role_api", set_user_profile_helment_role_api)
+
 }
 
 func main() {

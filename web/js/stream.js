@@ -1,11 +1,25 @@
-var boxes = [[], [], [], []];
-var images = [[], [], [], []];
-var person_count = [0, 0, 0, 0];
-var server_availabilties = [true, true, true, true];
+let boxes = [[], [], [], []];
+let images = [[], [], [], []];
+let person_count = [0, 0, 0, 0];
+let server_availabilties = [true, true, true, true];
+let helment_roles= {};
+let showing_items = [];
 const normal_timeout = 0;
 const error_timeout = 250;
 
-var canvas_array = [];
+let canvas_array = [];
+
+let setting_array = []
+
+let json_result //= get_user_profile_setting();
+
+window.addEventListener("load", async function () {
+  showing_items = await get_user_profile_setting();
+  helment_roles = await get_helment_roles();
+  for (const [key, value] of Object.entries(helment_roles)) {
+    classEnum[key] = value;
+  }
+})
 
 function get_notification(url) {
   const socket = new WebSocket(`ws://${url}`);
@@ -126,13 +140,17 @@ function update_image(stream_source) {
       }
     }
     for (let i = 0; i < box.length; ++i) {
+      let class_type = box[i].class_type;
+      if(!(showing_items.includes(class_type))){
+        continue
+      }
       const scaledX1 = box[i].x1 * (canvas.width / image.width);
       const scaledY1 = box[i].y1 * (canvas.height / image.height);
       const scaledWidth =
         (box[i].x2 - box[i].x1) * (canvas.width / image.width);
       const scaledHeight =
         (box[i].y2 - box[i].y1) * (canvas.height / image.height);
-      class_type = box[i].class_type;
+      //class_type = box[i].class_type;
       box_color = getBoxColor(class_type);
       ctx.beginPath();
       ctx.strokeStyle = box_color;
@@ -166,7 +184,6 @@ function update_image(stream_source) {
 
 function getBoxColor(class_type) {
   switch (class_type) {
-    // case 0:
     case 1:
     case 7:
     case 10:
@@ -183,8 +200,7 @@ function getBoxColor(class_type) {
   }
 }
 
-const classEnum = {
-  // 0: "Hardhat",
+let classEnum = {
   1: "Mask",
   2: "No Hardhat",
   3: "No Mask",
@@ -194,10 +210,10 @@ const classEnum = {
   7: "Safety Vest",
   8: "Machinery",
   9: "Vehicle",
-  10: "Blue Hardhat",
-  11: "Orange Hardhat",
-  12: "White Hardhat",
-  13: "Yellow Hardhat",
+  10: "Technicaler",
+  11: "Signaller",
+  12: "Supervisor",
+  13: "Worker",
 };
 
 function getClass(class_type) {

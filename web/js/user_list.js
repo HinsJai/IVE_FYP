@@ -1,6 +1,12 @@
 function get_user_list() {
   fetch(`/users_list_api`)
-    .then((response) => response.json())
+    .then((response) => {
+      if (response.status === 401) {
+        window.location.replace("/?unauth=true")
+        throw new Error("not login")
+      }
+      return response.json()
+    })
     .then((data) => {
       $("#myTable").DataTable({
         data: data[0].result,

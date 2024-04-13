@@ -1,4 +1,6 @@
 #V2
+surreal sql --conn http://127.0.0.1:8080 --user root --pass root
+
 SELECt * FROM violation_record
 DELETE violation_record
 count((SELECT * FROM violation_record  WHERE 'NO_MASK' IN violation_type and   time >= time::floor(time::now(),1d)));

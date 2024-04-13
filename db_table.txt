@@ -47,5 +47,48 @@ INSERT INTO user {
     position: "Admin"
 };
 
+Setting
+
+DEFINE TABLE setting;
+DEFINE FIELD email ON TABLE setting TYPE string ASSERT string::is::email($value);
+DEFINE FIELD profileSetting ON TABLE setting TYPE array DEFAULT [
+    1,2,3,4,5,6,7,8,9,10,11,12,13
+];
+
+insert into setting {
+    email:'jason199794@gmail.com'
+}
+
+DEFINE TABLE hardhatRole;
+DEFINE FIELD email ON TABLE hardhatRole TYPE string ASSERT string::is::email($value);
+DEFINE FIELD role ON TABLE hardhatRole  type object default {10:'Technicaler',11:'Signaller',12:'Supervisor',13:'Worker'};
+
+insert into hardhatRole {
+    email:'jason199794@gmail.com'
+}
 
 
+
+ {'mask': true},
+    {'noHardhat': true},
+    {'noMask': true},
+    {'noSafetyVest': true},
+    {'person': true},
+    {'safetyCone': true},
+    {'safetyVest': true},
+    {'machinery': true},
+    {'vehicle': true},
+    {'blueHardhat': 'Technicaler'},
+    {'orangeHardhat': 'Signaller'},
+    {'whiteHardhat': 'Supervisor'},
+    {'yellowHardhat': 'Worker'}
+
+
+    update setting set profileSetting = [1,5,6,7,8,9] where email = 'jason199794@gmail.com';
+
+        update hardhatRole set role = {
+                        10: 'Test',
+                        11: 'Signaller',
+                        12: 'Supervisor',
+                        13: 'Worker'
+        } where email = 'jason199794@gmail.com';
