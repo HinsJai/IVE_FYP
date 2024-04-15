@@ -4,6 +4,25 @@ $(document).ready(function () {
     })
 })
 
+function loadSetting() {
+    get_user_profile_setting().then((data) => {
+        if (data) {
+            for (let element of data) {
+                $(`#btn-${element}`).prop("checked", true);
+            };
+        }
+    });
+
+    get_helment_roles().then((data) => {
+        if (data) {
+            for (const [key, value] of Object.entries(data)) {
+                console.log(key, value);
+                $(`#label-${key}`).innerHTML = value;
+            };
+        }
+    });
+}
+
 async function get_helment_roles() {
     response = await fetch(`/get_helment_roles`)
     if (response.status === 401) {
@@ -25,11 +44,16 @@ async function get_user_profile_setting() {
 }
 
 function setup_user_profile_setting() {
+    let profileSetting = [];
+    $("input:checkbox[name=profileSetting]:checked").each(function () {
+        profileSetting.push(parseInt($(this).val()));
+    });
+    // console.log(profileSetting);
     $.ajax({
         contentType: "application/json",
         url: "/set_setting_profile_api",
         type: "POST",
-        data: JSON.stringify({ "data": [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13] }),
+        data: JSON.stringify({ "data": profileSetting }),
 
         success: function () {
             set_helment_role();
@@ -52,7 +76,6 @@ function setup_user_profile_setting() {
             });
         },
     });
-
 }
 
 function set_helment_role() {
@@ -60,7 +83,7 @@ function set_helment_role() {
         contentType: "application/json",
         url: "/set_helment_role_api",
         type: "POST",
-        data: JSON.stringify({ 10: "Test", 11: "Signaller", 12: "Supervisor", 13: "Worker" }),
+        data: JSON.stringify({ 10: "Technicaler", 11: "Signaller", 12: "Supervisor", 13: "Worker" }),
 
         success: function () {
             const Toast = Swal.mixin({
@@ -101,3 +124,4 @@ function set_helment_role() {
 }
 
 window.onload = get_user_profile_setting;
+window.onload = loadSetting();

@@ -300,6 +300,31 @@ func get_records_api(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
+func get_warning_year_count_api(c *fiber.Ctx) error {
+
+	result, err := db.Query("Select month, count(select * from violation_record where time::month(time) = $parent.month and time::year(time) = time::year(time::now())) from (array::distinct((select time::month(time) as month from violation_record where time::year(time) = time::year(time::now()))));", map[string]string{})
+	if err != nil {
+		return c.SendString(fmt.Sprintf("Error: %v", err))
+	}
+	return c.JSON(result)
+}
+
+func get_warning_day_count_api(c *fiber.Ctx) error {
+	result, err := db.Query("SELECT count() FROM violation_record WHERE time::day(time) = time::day(time::now());", map[string]string{})
+	if err != nil {
+		return c.SendString(fmt.Sprintf("Error: %v", err))
+	}
+	return c.JSON(result)
+}
+
+func get_violation_month_record_api(c *fiber.Ctx) error {
+	result, err := db.Query("SELECT * FROM violation_record WHERE time::month(time) = time::month(time::now());", map[string]string{})
+	if err != nil {
+		return c.SendString(fmt.Sprintf("Error: %v", err))
+	}
+	return c.JSON(result)
+}
+
 func get_users_list(c *fiber.Ctx) error {
 	var err error
 	sess, err = store.Get(c)
@@ -629,6 +654,9 @@ func setup_get(app *fiber.App) {
 	app.Get("/image", websocket.New(image_ws))
 	app.Get("/box", websocket.New(box_ws))
 	app.Get("/get_helment_roles", get_helment_role)
+	app.Get("/get_warning_year_count_api", get_warning_year_count_api)
+	app.Get("/get_warning_day_count_api", get_warning_day_count_api)
+	app.Get("/get_violation_month_record_api", get_violation_month_record_api)
 }
 
 func setup_post(app *fiber.App) {
@@ -675,7 +703,6 @@ func main() {
 	setup_post(app)
 
 	go start_server()
-
 	var wg sync.WaitGroup
 	wg.Add(2 * len(box_clients))
 	frame_data = make([][]byte, len(frame_clients))
@@ -687,6 +714,7 @@ func main() {
 		go get_box_data(&wg, i)
 	}
 	wg.Wait()
+
 }
 
 type WebConfig struct {

@@ -28,25 +28,32 @@
       data-include="navigation/side_bar"
     ></div>
 
-    <div id="records" class="flex-1 p-20">
-      <table id="myTable" class="w-full display">
-        <thead class="bg-black mt-4">
-          <tr>
-            <th class="p-3 text-base font-semibold tracking-wide text-white">
-              Camera ID
-            </th>
-            <th class="p-3 text-base font-semibold tracking-wide text-white">
-              Violation Type
-            </th>
-            <th class="p-3 text-base font-semibold tracking-wide text-white">
-              Work Place
-            </th>
-            <th class="p-3 text-base font-semibold tracking-wide text-white">
-              Time
-            </th>
-          </tr>
-        </thead>
-      </table>
+    <div id="records" class="flex flex-col w-full bg-gray-200">
+      <div class="flex items-center p-6 bg-black justify-between mb-4">
+        <p class="text-4xl font-semibold text-white p-4">Viloation Record</p>
+      </div>
+      <!-- <div class="p-4 flex justify-center w-full"> -->
+      <div class="p-12">
+        <table id="myTable" class="w-full display">
+          <thead class="bg-black mt-4">
+            <tr>
+              <th class="p-3 text-base font-semibold tracking-wide text-white">
+                Camera ID
+              </th>
+              <th class="p-3 text-base font-semibold tracking-wide text-white">
+                Violation Type
+              </th>
+              <th class="p-3 text-base font-semibold tracking-wide text-white">
+                Work Place
+              </th>
+              <th class="p-3 text-base font-semibold tracking-wide text-white">
+                Time
+              </th>
+            </tr>
+          </thead>
+        </table>
+      </div>
+      <!-- </div> -->
     </div>
   </body>
 </html>

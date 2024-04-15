@@ -8,3 +8,6 @@ DELETE FROM user
 select * from user
 INSERT INTO user {    email: 'jason199794@gmail.com',    password: crypto::argon2::generate("Aa123456"),    firstName: "Kwok Hin",    lastName: "Kong",    gender: "M",    contact: 65748125,    emergencyContact: 54125874,    emergencyFirstName: "Tai Ming",    emergencyLastName: "Kong",    emergencyPersonRelation: "Father",    position: "Admin"};
 select * from user
+
+// count each month violation record in this year
+Select month, count(select * from violation_record where time::month(time) = $parent.month and time::year(time) = time::year(time::now())) from (array::distinct((select time::month(time) as month from violation_record where time::year(time) = time::year(time::now()))));

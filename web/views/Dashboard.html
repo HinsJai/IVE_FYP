@@ -26,11 +26,12 @@
         class="flex items-center justify-between text-slate-50 w-full mb-5"
       >
         <p class="font-bold text-4xl">Dashboard</p>
-        <p class="text-2xl">Hello, wecome back</p>
-        <div class="flex gap-3">
+        <p class="text-white text-2xl font-semibold" id="date-time-now"></p>
+        <!-- <p class="text-2xl">Hello, wecome back</p> -->
+        <!-- <div class="flex gap-3">
           <p class="text-xl">Kwok Hin</p>
           <i class="fa-solid fa-circle-user text-3xl"></i>
-        </div>
+        </div> -->
       </div>
 
       <div class="grid grid-cols-4 gap-6 mb-6">
@@ -39,7 +40,7 @@
         >
           <div>
             <p class="text-green-500 text-3xl">50</p>
-            <p class="text-gray-500 text-xl">Workers <span>(today)</span></p>
+            <p class="text-white text-xl">Workers <span>(Today)</span></p>
           </div>
           <i class="fa-solid fa-user-doctor text-6xl text-green-500"></i>
         </div>
@@ -48,8 +49,8 @@
           class="bg-[#272727] flex justify-between p-5 rounded-2xl shadow-2xl"
         >
           <div>
-            <p class="text-blue-500 text-3xl">1000</p>
-            <p class="text-gray-500 text-xl">Manhours <span>(today)</span></p>
+            <p class="text-blue-500 text-3xl">450</p>
+            <p class="text-white text-xl">Manhours <span>(Today)</span></p>
           </div>
           <i class="fa-solid fa-business-time text-6xl text-blue-500"></i>
         </div>
@@ -58,8 +59,8 @@
           class="bg-[#272727] flex justify-between p-5 rounded-2xl shadow-2xl"
         >
           <div>
-            <p class="text-yellow-400 text-3xl">10</p>
-            <p class="text-gray-500 text-xl">Warnings <span>(today)</span></p>
+            <p class="text-yellow-400 text-3xl" id="warning_day_count">0</p>
+            <p class="text-white text-xl">Warnings <span>(Today)</span></p>
           </div>
           <i
             class="fa-solid fa-triangle-exclamation text-6xl text-yellow-400"
@@ -71,7 +72,7 @@
         >
           <div>
             <p class="text-red-600 text-3xl">1</p>
-            <p class="text-gray-500 text-xl">Accidents <span>(today)</span></p>
+            <p class="text-white text-xl">Accidents <span>(Today)</span></p>
           </div>
           <i class="fa-solid fa-person-falling-burst text-6xl text-red-600"></i>
         </div>
@@ -79,14 +80,12 @@
 
       <div class="grid grid-cols-3 gap-6 border-none">
         <div class="col-span-2 bg-[#272727] p-5 rounded-2xl shadow-2xl">
-          <p class="text-slate-50 text-center text-2xl mb-4">
-            Warning & Accidents (past 12 months)
-          </p>
-          <canvas id="past 12 months"></canvas>
+          <p class="text-slate-50 text-center text-2xl mb-4">Warning (2024)</p>
+          <canvas id="warning" class="text-white"></canvas>
         </div>
         <div class="col-span-1 bg-[#272727] p-5 rounded-2xl shadow-2xl">
           <p class="text-slate-50 text-center text-2xl mb-4">
-            The top three most common violation
+            Violation rate (month)
           </p>
           <canvas id="common violation" class="text-slate-50"></canvas>
         </div>
