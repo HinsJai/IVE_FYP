@@ -2,7 +2,7 @@ let boxes = [[], [], [], []];
 let images = [[], [], [], []];
 let person_count = [0, 0, 0, 0];
 let server_availabilties = [true, true, true, true];
-let helment_roles= {};
+let helment_roles = {};
 let showing_items = [];
 const normal_timeout = 0;
 const error_timeout = 250;
@@ -91,9 +91,11 @@ function get_data(storage, stream_source, data_type, url) {
 function create_resize_function(canvas) {
   let scale = window.devicePixelRatio;
   return function () {
-    const canvas_width =
+    let canvas_width =
       (1003.97 / (2552 - 224 - 288)) * (innerWidth - 224 - 288);
-    const canvas_height = (279.2 / 708) * innerHeight;
+    let canvas_height = (279.2 / 708) * innerHeight;
+    //canvas_width *= 2;
+    //canvas_height *= 2;
     canvas.style.width = canvas_width + "px";
     canvas.style.height = canvas_height + "px";
     canvas.width = canvas_width * scale;
@@ -141,7 +143,7 @@ function update_image(stream_source) {
     }
     for (let i = 0; i < box.length; ++i) {
       let class_type = box[i].class_type;
-      if(!(showing_items.includes(class_type))){
+      if (!(showing_items.includes(class_type))) {
         continue
       }
       const scaledX1 = box[i].x1 * (canvas.width / image.width);
@@ -167,7 +169,7 @@ function update_image(stream_source) {
     ctx.beginPath();
     ctx.fillStyle = "green";
     ctx.font = "lighter 24px Arial";
-    ctx.fillText(`Person Count: ${person_count[stream_source]}`, 10, 20);
+    ctx.fillText(`Person Count: ${person_count[stream_source]}`, 10, 40);
     ctx.fill();
     ctx.stroke();
 

@@ -17,6 +17,10 @@
     <script src="js/common.js"></script>
     <script src="js/setting.js"></script>
     <script src="js/stream.js"></script>
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
   </head>
 
   <body class="flex h-screen gap-2 bg-black">
@@ -40,7 +44,7 @@
         ></i> -->
       </div>
       <div style="height: 80%" class="grid grid-cols-2 grid-rows-2 gap-2">
-        <div class="overflow-hidden">
+        <div class="overflow-hidden row-span-1 col-span-1">
           <img
             id="cam placeholder 0"
             src="../images/cam_unavailable.jpg"
@@ -50,7 +54,25 @@
             style="width: 100%; height: 100%"
             hidden
           />
-          <canvas id="canvas 0" class="bg-slate-500 w-full h-full"></canvas>
+          <canvas
+            id="canvas 0"
+            class="bg-slate-500 w-full h-full canvas-0"
+          ></canvas>
+          <span
+            id="fullscreen-btn1"
+            class="text-white relative right-0 bottom-14 float-right"
+          >
+            <i class="material-icons text-6xl cursor-pointer hover:text-orange-500"
+              >fullscreen</i
+            ></span
+          >
+          <script>
+            let fullscreen_btn1 = document.querySelector("#fullscreen-btn1");
+            fullscreen_btn1.addEventListener("click", function () {
+              let canvas = document.querySelector(".canvas-0");
+              canvas.requestFullscreen();
+            });
+          </script>
         </div>
         <div class="overflow-hidden">
           <img
@@ -62,7 +84,25 @@
             style="width: 100%; height: 100%"
             hidden
           />
-          <canvas id="canvas 1" class="bg-slate-500 w-full h-full"></canvas>
+          <canvas
+            id="canvas 1"
+            class="bg-slate-500 w-full h-full canvas-1"
+          ></canvas>
+          <span
+            id="fullscreen-btn2"
+            class="text-white relative right-0 bottom-14 float-right"
+          >
+            <i class="material-icons text-6xl cursor-pointer hover:text-orange-500"
+              >fullscreen</i
+            ></span
+          >
+          <script>
+            let fullscreen_btn2 = document.querySelector("#fullscreen-btn2");
+            fullscreen_btn1.addEventListener("click", function () {
+              let canvas = document.querySelector(".canvas-1");
+              canvas.requestFullscreen();
+            });
+          </script>
         </div>
         <div class="overflow-hidden">
           <img
@@ -74,7 +114,25 @@
             style="width: 100%; height: 100%"
             hidden
           />
-          <canvas id="canvas 2" class="bg-slate-500 w-full h-full"></canvas>
+          <canvas
+            id="canvas 2"
+            class="bg-slate-500 w-full h-full canvas-2"
+          ></canvas>
+          <span
+            id="fullscreen-btn3"
+            class="text-white relative right-0 bottom-14 float-right"
+          >
+            <i class="material-icons text-6xl cursor-pointer hover:text-orange-500"
+              >fullscreen</i
+            ></span
+          >
+          <script>
+            let fullscreen_btn3 = document.querySelector("#fullscreen-btn3");
+            fullscreen_btn1.addEventListener("click", function () {
+              let canvas = document.querySelector(".canvas-2");
+              canvas.requestFullscreen();
+            });
+          </script>
         </div>
         <div class="overflow-hidden">
           <img
@@ -86,7 +144,25 @@
             style="width: 100%; height: 100%"
             hidden
           />
-          <canvas id="canvas 3" class="bg-slate-500 w-full h-full"></canvas>
+          <canvas
+            id="canvas 3"
+            class="bg-slate-500 w-full h-full canvas-3"
+          ></canvas>
+          <span
+            id="fullscreen-btn3"
+            class="text-white relative right-0 bottom-14 float-right"
+          >
+            <i class="material-icons text-6xl cursor-pointer hover:text-orange-500"
+              >fullscreen</i
+            ></span
+          >
+          <script>
+            let fullscreen_btn4 = document.querySelector("#fullscreen-btn3");
+            fullscreen_btn1.addEventListener("click", function () {
+              let canvas = document.querySelector(".canvas-3");
+              canvas.requestFullscreen();
+            });
+          </script>
         </div>
       </div>
       <div style="height: 10%" class="bg-[#222222]"></div>

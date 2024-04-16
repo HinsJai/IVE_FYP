@@ -38,20 +38,6 @@ type User struct {
 	Password string `json:"password" xml:"password" form:"password"`
 }
 
-type NewUser struct {
-	FirstName               string `json:"fName" xml:"fName" form:"fName"`
-	LastName                string `json:"lName" xml:"lName" form:"lName"`
-	Email                   string `json:"email" xml:"email" form:"email"`
-	Gender                  string `json:"gender" xml:"gender" form:"gender"`
-	Contact                 int    `json:"contact" xml:"contact" form:"contact"`
-	Password                string `json:"password" xml:"password" form:"password"`
-	EmergencyContact        int    `json:"eContact" xml:"eContact" form:"eContact"`
-	EmergencyFirstName      string `json:"eFName" xml:"eFName" form:"eFName"`
-	EmergencyLastName       string `json:"eLName" xml:"eLName" form:"eLName"`
-	EmergencyPersonRelation string `json:"ePersonRelation" xml:"ePersonRelation" form:"ePersonRelation"`
-	Position                string `json:"position" xml:"position" form:"position"`
-}
-
 type ForgotPassword struct {
 	Email string `json:"email" xml:"email" form:"email"`
 }
@@ -230,44 +216,57 @@ func create_user(c *fiber.Ctx) error {
 }
 
 func create_user_api(c *fiber.Ctx) error {
-	new_user := NewUser{}
+	// new_user := NewUser{}
 	var err error
+	new_user := map[string]interface{}{}
 	if err = c.BodyParser(&new_user); err != nil {
 		return err
 	}
-	encrypted_pass := get_encrypted_password(new_user.Password)[0].(map[string]interface{})["result"].(string)
+	fmt.Print(new_user)
+
+	encrypted_pass := get_encrypted_password(new_user["password"].(string))[0].(map[string]interface{})["result"].(string)
+
+	fmt.Printf("encrypted_pass: %s", encrypted_pass)
+
+	contact, _ := strconv.ParseInt((new_user["contact"].(string)), 10, 64)
+
+	eContact, _ := strconv.ParseInt((new_user["eContact"].(string)), 10, 64)
 
 	create_user_result, _ := db.Create("user", map[string]interface{}{
-		"email":                   new_user.Email,
+		"email":                   new_user["email"].(string),
 		"password":                encrypted_pass,
-		"firstName":               new_user.FirstName,
-		"lastName":                new_user.LastName,
-		"gender":                  new_user.Gender,
-		"contact":                 new_user.Contact,
-		"position":                new_user.Position,
-		"emergencyContact":        new_user.EmergencyContact,
-		"emergencyFirstName":      new_user.EmergencyFirstName,
-		"emergencyLastName":       new_user.EmergencyLastName,
-		"emergencyPersonRelation": new_user.EmergencyPersonRelation,
+		"firstName":               new_user["fName"].(string),
+		"lastName":                new_user["lName"].(string),
+		"gender":                  new_user["gender"].(string),
+		"contact":                 contact,
+		"position":                new_user["position"].(string),
+		"emergencyContact":        eContact,
+		"emergencyFirstName":      new_user["eFName"].(string),
+		"emergencyLastName":       new_user["eLName"].(string),
+		"emergencyPersonRelation": new_user["ePersonRelation"].(string),
 	})
 
-	setProfileResult, _ := db.Create("setting", map[string]interface{}{
-		"email": new_user.Email,
-	})
-
-	setHardhatRoleResult, _ := db.Create("hardhatRole", map[string]interface{}{
-		"email": new_user.Email,
-	})
-
-	if create_user_result != nil && setProfileResult != nil && setHardhatRoleResult != nil {
-		return c.Redirect("/create_user")
+	if create_user_result == nil {
+		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
-	// if setProfileResult != nil {
-	// 	return c.Redirect("/create_user")
-	// }
+	setProfileResult, _ := db.Create("setting", map[string]interface{}{
+		"email": new_user["email"].(string),
+	})
 
-	return c.JSON(setProfileResult)
+	if setProfileResult == nil {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	setHardhatRoleResult, _ := db.Create("hardhatRole", map[string]interface{}{
+		"email": new_user["email"].(string),
+	})
+
+	if setHardhatRoleResult == nil {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	return c.SendStatus(fiber.StatusOK)
 }
 
 func get_encrypted_password(password string) []interface{} {
@@ -300,9 +299,32 @@ func get_records_api(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
-func get_warning_year_count_api(c *fiber.Ctx) error {
+// func get_warning_year_count_api(c *fiber.Ctx) error {
+// 	result, err := db.Query("Select month, count(select * from violation_record where time::month(time) = $parent.month and time::year(time) = time::year(time::now())) from (array::distinct((select time::month(time) as month from violation_record where time::year(time) = time::year(time::now()))));", map[string]string{})
+// 	if err != nil {
+// 		return c.SendString(fmt.Sprintf("Error: %v", err))
+// 	}
+// 	return c.JSON(result)
+// }
 
-	result, err := db.Query("Select month, count(select * from violation_record where time::month(time) = $parent.month and time::year(time) = time::year(time::now())) from (array::distinct((select time::month(time) as month from violation_record where time::year(time) = time::year(time::now()))));", map[string]string{})
+func get_warning_count_filter_api(c *fiber.Ctx) error {
+
+	var err error
+	sess, err = store.Get(c)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if sess.Get("email") == nil {
+		return c.SendStatus(fiber.StatusUnauthorized)
+	}
+
+	condition_1 := c.Query("condition_1") //hour or day or month
+	condition_2 := c.Query("condition_2") // year or month or day
+
+	// fmt.Print(condition_1)
+	// fmt.Print(condition_2)
+
+	result, err := db.Query(fmt.Sprintf("Select %s, count(select * from violation_record where time::%s(time) = $parent.%s and time::year(time) = time::year(time::now())) from (array::distinct((select time::%s(time) as %s from violation_record where time::%s(time) = time::%s(time::now()))));", condition_1, condition_1, condition_1, condition_1, condition_1, condition_2, condition_2), map[string]string{})
 	if err != nil {
 		return c.SendString(fmt.Sprintf("Error: %v", err))
 	}
@@ -310,18 +332,41 @@ func get_warning_year_count_api(c *fiber.Ctx) error {
 }
 
 func get_warning_day_count_api(c *fiber.Ctx) error {
-	result, err := db.Query("SELECT count() FROM violation_record WHERE time::day(time) = time::day(time::now());", map[string]string{})
+	result, err := db.Query("COUNT(SELECT * FROM violation_record WHERE time::day(time) = time::day(time::now()));", map[string]string{})
 	if err != nil {
 		return c.SendString(fmt.Sprintf("Error: %v", err))
 	}
 	return c.JSON(result)
 }
 
-func get_violation_month_record_api(c *fiber.Ctx) error {
-	result, err := db.Query("SELECT * FROM violation_record WHERE time::month(time) = time::month(time::now());", map[string]string{})
+// func get_violation_month_record_api(c *fiber.Ctx) error {
+// 	result, err := db.Query("SELECT * FROM violation_record WHERE time::month(time) = time::month(time::now());", map[string]string{})
+// 	if err != nil {
+// 		return c.SendString(fmt.Sprintf("Error: %v", err))
+// 	}
+// 	return c.JSON(result)
+// }
+
+func warning_record_filter(c *fiber.Ctx) error {
+	var err error
+	sess, err = store.Get(c)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if sess.Get("email") == nil {
+		return c.SendStatus(fiber.StatusUnauthorized)
+	}
+
+	durationString := c.Query("duration")
+
+	// fmt.Print(durationString)
+
+	result, _ := db.Query(fmt.Sprintf("SELECT * FROM violation_record WHERE time::%s(time) = %s;", durationString, fmt.Sprintf("time::%s(time::now())", durationString)), map[string]string{})
+
 	if err != nil {
 		return c.SendString(fmt.Sprintf("Error: %v", err))
 	}
+
 	return c.JSON(result)
 }
 
@@ -654,9 +699,11 @@ func setup_get(app *fiber.App) {
 	app.Get("/image", websocket.New(image_ws))
 	app.Get("/box", websocket.New(box_ws))
 	app.Get("/get_helment_roles", get_helment_role)
-	app.Get("/get_warning_year_count_api", get_warning_year_count_api)
+	// app.Get("/get_warning_year_count_api", get_warning_year_count_api)
 	app.Get("/get_warning_day_count_api", get_warning_day_count_api)
-	app.Get("/get_violation_month_record_api", get_violation_month_record_api)
+	// app.Get("/get_violation_month_record_api", get_violation_month_record_api)
+	app.Get("/get_warning_count_filter_api", get_warning_count_filter_api)
+	app.Get("/warning_record_filter", warning_record_filter)
 }
 
 func setup_post(app *fiber.App) {

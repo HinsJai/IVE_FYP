@@ -16,11 +16,16 @@ function loadSetting() {
     get_helment_roles().then((data) => {
         if (data) {
             for (const [key, value] of Object.entries(data)) {
-                console.log(key, value);
+       
                 $(`#label-${key}`).innerHTML = value;
+                $(`#role-${key}`).val(value);
             };
         }
     });
+}
+
+function cancel() {
+    loadSetting();
 }
 
 async function get_helment_roles() {
@@ -48,7 +53,7 @@ function setup_user_profile_setting() {
     $("input:checkbox[name=profileSetting]:checked").each(function () {
         profileSetting.push(parseInt($(this).val()));
     });
-    // console.log(profileSetting);
+
     $.ajax({
         contentType: "application/json",
         url: "/set_setting_profile_api",
@@ -79,11 +84,34 @@ function setup_user_profile_setting() {
 }
 
 function set_helment_role() {
+    let helment_roles = {};
+    for (let i = 10; i < 14; i++) {
+        if ($(`#role-${i}`).val() == "") {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: "top-end",
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.onmouseenter = Swal.stopTimer;
+                    toast.onmouseleave = Swal.resumeTimer;
+                }
+            });
+            Toast.fire({
+                icon: "error",
+                title: "Please fill in all the fields"
+            });
+            return;
+        }
+        helment_roles[i] = $(`#role-${i}`).val();
+    }
+
     $.ajax({
         contentType: "application/json",
         url: "/set_helment_role_api",
         type: "POST",
-        data: JSON.stringify({ 10: "Technicaler", 11: "Signaller", 12: "Supervisor", 13: "Worker" }),
+        data: JSON.stringify(helment_roles),
 
         success: function () {
             const Toast = Swal.mixin({
