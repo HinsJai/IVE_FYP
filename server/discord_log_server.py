@@ -2,8 +2,7 @@ import io
 import logging
 import sys
 import tomllib
-from typing import Self
-
+from typing import Any, Self
 import discord
 
 sys.path.extend([".."])
@@ -23,6 +22,9 @@ from protos.proto_pb2 import Empty
 from protos.proto_pb2_grpc import add_DiscordLogServicer_to_server
 from protos.proto_pb2_grpc import DiscordLogServicer
 
+from surrealdb import Surreal
+from threading import Timer
+
 try:
     from typing import override, Self
 except ImportError:
@@ -37,7 +39,7 @@ import grpc
 
 with open("config.toml", "rb") as config:
     config = tomllib.load(config)
-
+    
 GUILD_ID = config["discord"]["guild_id"]
 LOG_CHANNEL = config["discord"]["log_channel"]
 TOKEN = config["discord"]["token"]

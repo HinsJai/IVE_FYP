@@ -18,7 +18,7 @@ ip = "127.0.0.1"
 port = 8575
 token = "MTE4ODQyNTM0MDI1MTU1Mzg2Mw.Guojnj.J_FHmL2aSbdr1ZJPFMlNwNgryorIRZmboN2AYk"
 guild_id = 1136972746698522664
-log_channel = "log"
+log_channel = "violation-log"
 interaction_user_id = 688711207087374365
 
 [grpc_notification]

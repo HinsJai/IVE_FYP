@@ -187,7 +187,6 @@ async function get_warning_count_filter(condition_1 = "hour", condition_2 = "day
     }
     warningData[index] = result[i]['count']
   }
-  console.log(warningData)
 
   if (warningChart == null) {
     warningChart = new Chart(document.getElementById("warning"), {
@@ -212,7 +211,7 @@ async function get_warning_count_filter(condition_1 = "hour", condition_2 = "day
             title: {
               display: true,
               text: `num of ${condition_1}`,
-              color: 'gray',
+              color: 'white',
               font: {
                 size: 20
               }
@@ -228,7 +227,7 @@ async function get_warning_count_filter(condition_1 = "hour", condition_2 = "day
             title: {
               display: true,
               text: `num of count`,
-              color: 'gray',
+              color: 'white',
               font: {
                 size: 20
               }

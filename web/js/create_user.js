@@ -41,26 +41,12 @@ function create_user() {
         return;
     }
 
-    console.log(fName, lName, email, contact, gender, password, eFName, eLName, eContact, ePersonRelation, position);
-
     $.ajax({
         contentType: "application/json",
         url: "/create_user_api",
         type: "POST",
         data: JSON.stringify({ "fName": fName, "lName": lName, "email": email, "contact": contact, "gender": gender, "password": password, "eFName": eFName, "eLName": eLName, "eContact": eContact, "ePersonRelation": ePersonRelation, "position": position }),
         success: function () {
-            //clear all the fields
-            // $('[name="fName"]').val('');
-            // $('[name="lName"]').val('');
-            // $('[name="email"]').val('');
-            // $('[name="contact"]').val('');
-            // $('[name="password"]').val('');
-            // $('[name="eFName"]').val('');
-            // $('[name="eLName"]').val('');
-            // $('[name="eContact"]').val('');
-            // $("#ePersonRelation").val('');
-            // $("#postion").val('');
-
 
             const Toast = Swal.mixin({
                 toast: true,

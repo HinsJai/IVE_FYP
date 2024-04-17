@@ -222,7 +222,7 @@ func create_user_api(c *fiber.Ctx) error {
 	if err = c.BodyParser(&new_user); err != nil {
 		return err
 	}
-	fmt.Print(new_user)
+	// fmt.Print(new_user)
 
 	encrypted_pass := get_encrypted_password(new_user["password"].(string))[0].(map[string]interface{})["result"].(string)
 
@@ -263,6 +263,84 @@ func create_user_api(c *fiber.Ctx) error {
 	})
 
 	if setHardhatRoleResult == nil {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+func update_user_api(c *fiber.Ctx) error {
+
+	var err error
+	sess, err = store.Get(c)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if sess.Get("email") == nil {
+		return c.SendStatus(fiber.StatusUnauthorized)
+	}
+
+	userInfo := map[string]interface{}{}
+	if err = c.BodyParser(&userInfo); err != nil {
+		return err
+	}
+
+	contact, _ := strconv.ParseInt((userInfo["contact"].(string)), 10, 64)
+
+	eContact, _ := strconv.ParseInt((userInfo["eContact"].(string)), 10, 64)
+
+	result, _ := db.Create("Update user set contact = $contact, eContact = $eContact, position = $positon where email = $email", map[string]interface{}{
+		"email":    userInfo["email"].(string),
+		"contact":  contact,
+		"eContact": eContact,
+		"position": userInfo["position"].(string),
+	})
+
+	if result == nil {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+func delete_user_api(c *fiber.Ctx) error {
+	var err error
+	sess, err = store.Get(c)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if sess.Get("email") == nil {
+		return c.SendStatus(fiber.StatusUnauthorized)
+	}
+
+	userInfo := map[string]interface{}{}
+
+	if err = c.BodyParser(&userInfo); err != nil {
+		return err
+	}
+	fmt.Print(userInfo)
+	
+	user_result, _ := db.Query("DELETE FROM user where email = $email", map[string]interface{}{
+		"email": userInfo["email"].(string),
+	})
+
+	if user_result == nil {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	setting_result, _ := db.Query("DELETE FROM setting where email = $email", map[string]interface{}{
+		"email": userInfo["email"].(string),
+	})
+
+	if setting_result == nil {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	hardhat_role_result, _ := db.Query("DELETE FROM hardhatRole where email = $email", map[string]interface{}{
+		"email": userInfo["email"].(string),
+	})
+
+	if hardhat_role_result == nil {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
@@ -321,8 +399,13 @@ func get_warning_count_filter_api(c *fiber.Ctx) error {
 	condition_1 := c.Query("condition_1") //hour or day or month
 	condition_2 := c.Query("condition_2") // year or month or day
 
-	// fmt.Print(condition_1)
-	// fmt.Print(condition_2)
+	if condition_1 != "hour" && condition_1 != "day" && condition_1 != "month" {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	if condition_2 != "year" && condition_2 != "month" && condition_2 != "day" {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
 
 	result, err := db.Query(fmt.Sprintf("Select %s, count(select * from violation_record where time::%s(time) = $parent.%s and time::year(time) = time::year(time::now())) from (array::distinct((select time::%s(time) as %s from violation_record where time::%s(time) = time::%s(time::now()))));", condition_1, condition_1, condition_1, condition_1, condition_1, condition_2, condition_2), map[string]string{})
 	if err != nil {
@@ -339,14 +422,6 @@ func get_warning_day_count_api(c *fiber.Ctx) error {
 	return c.JSON(result)
 }
 
-// func get_violation_month_record_api(c *fiber.Ctx) error {
-// 	result, err := db.Query("SELECT * FROM violation_record WHERE time::month(time) = time::month(time::now());", map[string]string{})
-// 	if err != nil {
-// 		return c.SendString(fmt.Sprintf("Error: %v", err))
-// 	}
-// 	return c.JSON(result)
-// }
-
 func warning_record_filter(c *fiber.Ctx) error {
 	var err error
 	sess, err = store.Get(c)
@@ -359,7 +434,9 @@ func warning_record_filter(c *fiber.Ctx) error {
 
 	durationString := c.Query("duration")
 
-	// fmt.Print(durationString)
+	if durationString != "day" && durationString != "month" && durationString != "year" {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
 
 	result, _ := db.Query(fmt.Sprintf("SELECT * FROM violation_record WHERE time::%s(time) = %s;", durationString, fmt.Sprintf("time::%s(time::now())", durationString)), map[string]string{})
 
@@ -393,13 +470,11 @@ func get_users_api(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusUnauthorized)
 	}
 
-	result, err := db.Query("SELECT * FROM user;", map[string]string{})
+	result, err := db.Query("SELECT firstName, lastName, gender, email, contact, position, emergencyContact, emergencyPersonRelation FROM user;", map[string]string{})
 	if err != nil {
 		log.Fatal(err)
 	}
-	// if err != nil {
-	// 	return c.SendString(fmt.Sprintf("Error: %v", err))
-	// }
+
 	return c.JSON(result)
 }
 
@@ -417,6 +492,20 @@ func get_stream(c *fiber.Ctx) error {
 		"web_server_url":          fmt.Sprintf(config.web.url),
 		"notification_server_url": fmt.Sprintf(config.notification.url),
 	})
+}
+
+func get_notification_url_api(c *fiber.Ctx) error {
+	var err error
+	sess, err = store.Get(c)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if sess.Get("email") == nil {
+		return c.Redirect("/?unauth=true", fiber.StatusSeeOther)
+	}
+
+	return c.JSON(fmt.Sprintf(config.notification.url))
+
 }
 
 func get_dashboard(c *fiber.Ctx) error {
@@ -585,7 +674,7 @@ func get_user_profile_setting_api(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusUnauthorized)
 	}
 
-	result, _ := db.Query("SELECT profileSetting FROM setting where email = $email", map[string]string{
+	result, _ := db.Query("SELECT profileSetting, notificaitonProfileSetting FROM setting where email = $email", map[string]string{
 		"email": sess.Get("email").(string),
 	})
 	if result != nil {
@@ -634,9 +723,10 @@ func set_user_profile_setting_api(c *fiber.Ctx) error {
 		return err
 	}
 
-	result, _ := db.Query("Update setting set profileSetting =$profile where email = $email", map[string]interface{}{
-		"email":   sess.Get("email").(string),
-		"profile": user_profile_setting["data"],
+	result, _ := db.Query("Update setting set profileSetting = $regularSetting, notificaitonProfileSetting = $notificationSetting where email = $email", map[string]interface{}{
+		"email":               sess.Get("email").(string),
+		"regularSetting":      user_profile_setting["regularSetting"],
+		"notificationSetting": user_profile_setting["notificationSetting"],
 	})
 	if result != nil {
 		return c.SendStatus(fiber.StatusOK)
@@ -704,6 +794,7 @@ func setup_get(app *fiber.App) {
 	// app.Get("/get_violation_month_record_api", get_violation_month_record_api)
 	app.Get("/get_warning_count_filter_api", get_warning_count_filter_api)
 	app.Get("/warning_record_filter", warning_record_filter)
+	app.Get("/get_notification_url", get_notification_url_api)
 }
 
 func setup_post(app *fiber.App) {
@@ -714,6 +805,8 @@ func setup_post(app *fiber.App) {
 	app.Post("/reset_password_api", reset_password_api)
 	app.Post("/set_setting_profile_api", set_user_profile_setting_api)
 	app.Post("/set_helment_role_api", set_user_profile_helment_role_api)
+	app.Post("/update_user_api", update_user_api)
+	app.Post("/delete_user_api", delete_user_api)
 
 }
 

@@ -7,8 +7,12 @@ $(document).ready(function () {
 function loadSetting() {
     get_user_profile_setting().then((data) => {
         if (data) {
-            for (let element of data) {
+            const [profileSetting, notificaitonProfileSetting] = data
+            for (let element of profileSetting) {
                 $(`#btn-${element}`).prop("checked", true);
+            };
+            for (let element of notificaitonProfileSetting) {
+                $(`#alert-${element}`).prop("checked", true);
             };
         }
     });
@@ -16,7 +20,7 @@ function loadSetting() {
     get_helment_roles().then((data) => {
         if (data) {
             for (const [key, value] of Object.entries(data)) {
-       
+
                 $(`#label-${key}`).innerHTML = value;
                 $(`#role-${key}`).val(value);
             };
@@ -45,20 +49,25 @@ async function get_user_profile_setting() {
         throw new Error("not login")
     }
     data = await response.json()
-    return data[0].result[0]["profileSetting"]
+    return [data[0].result[0]["profileSetting"], data[0].result[0]["notificaitonProfileSetting"]]
 }
 
 function setup_user_profile_setting() {
-    let profileSetting = [];
+    let regularSetting = [];
+    let notificationSetting = [];
     $("input:checkbox[name=profileSetting]:checked").each(function () {
-        profileSetting.push(parseInt($(this).val()));
+        regularSetting.push(parseInt($(this).val()));
+    });
+
+    $("input:checkbox[name=notificationSetting]:checked").each(function () {
+        notificationSetting.push(parseInt($(this).val()));
     });
 
     $.ajax({
         contentType: "application/json",
         url: "/set_setting_profile_api",
         type: "POST",
-        data: JSON.stringify({ "data": profileSetting }),
+        data: JSON.stringify({ "regularSetting": regularSetting, "notificationSetting": notificationSetting }),
 
         success: function () {
             set_helment_role();

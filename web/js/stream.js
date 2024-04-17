@@ -13,19 +13,54 @@ let setting_array = []
 
 let json_result //= get_user_profile_setting();
 
+// const notificaitonTypeName = {
+//   2: "NO_HARDHAT",
+//   3: "NO_MASK",
+//   4: "NO_SAFETY_VEST",
+// }
+
+//let notificaitonProfileSetting = Object.values(notificaitonTypeName)
+
 window.addEventListener("load", async function () {
-  showing_items = await get_user_profile_setting();
+ 
+  let data = await get_user_profile_setting();
+  showing_items = data[0]
+  //notificaitonProfileSetting = data[1].map(item => notificaitonTypeName[item])
   helment_roles = await get_helment_roles();
   for (const [key, value] of Object.entries(helment_roles)) {
     classEnum[key] = value;
   }
 })
 
+function getTimeNow() {
+  const now = new Date();
+  const hours = now.getHours();
+  const minutes = now.getMinutes();
+
+  const formattedHours = hours.toString().padStart(2, '0');
+  const formattedMinutes = minutes.toString().padStart(2, '0');
+
+  return `${formattedHours}:${formattedMinutes}`;
+}
 function get_notification(url) {
   const socket = new WebSocket(`ws://${url}`);
+ 
   socket.onmessage = function (message) {
     const data = JSON.parse(message.data);
-    const { camID, workplace, classType } = data;
+    let { camID, workplace, classType } = data;
+
+
+    const set1 = new Set(classType)
+    const set2 = new Set(notificaitonProfileSetting)
+
+    const intersection = new Set([...set1].filter(x => set2.has(x)));
+
+    if(intersection.size == 0) {
+      return;
+    }
+
+    classType = Array.from(intersection).join(', ')
+
     const notification = document.getElementById("notic-container");
     const newNotification = document.createElement("div");
 
@@ -36,16 +71,19 @@ function get_notification(url) {
 
     newNotification.innerHTML =
       `<div
-    class="relative flex w-full p-3 text-base text-gray-900 border border-white-900 rounded-lg font-regular mb-2"
+    class="relative flex w-full p-1 text-base text-gray-900 border border-white-900 rounded-lg font-regular mb-2"
     style="opacity: 1;">
-    <div class="shrink-0 text-white">
+    <div class="shrink-0 text-yellow-500">
         <i class="fa-solid fa-circle-exclamation"></i>
     </div>
-    <div class="ml-3">
-        <p class="block text-white font-sans text-base antialiased font-medium leading-relaxed text-inherit">
+    <div class="ml-3 p-1">
+        <p class="block text-yellow-400 font-semibold text-xl antialiased leading-relaxed ">
             New violation detected
         </p>
         <ul class="mt-2 ml-2 list-disc list-inside">
+        <li class="text-red-500 font-semibold">
+        Time : <span class="text-slate-50 font-semibold">${getTimeNow()}</span>
+        </li>
             <li class="text-red-500 font-semibold">
                 CamID : <span class="text-slate-50 font-semibold">${camID}</span>
             </li>

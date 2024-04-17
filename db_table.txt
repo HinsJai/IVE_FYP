@@ -54,10 +54,12 @@ DEFINE FIELD email ON TABLE setting TYPE string ASSERT string::is::email($value)
 DEFINE FIELD profileSetting ON TABLE setting TYPE array DEFAULT [
     1,2,3,4,5,6,7,8,9,10,11,12,13
 ];
+DEFINE FIELD notificaitonProfileSetting ON TABLE setting TYPE array DEFAULT [
+    2,3,4
+];
 
-insert into setting {
-    email:'jason199794@gmail.com'
-}
+UPDATE setting SET notificaitonProfileSetting = [2,3,4]; 
+
 
 DEFINE TABLE hardhatRole;
 DEFINE FIELD email ON TABLE hardhatRole TYPE string ASSERT string::is::email($value);

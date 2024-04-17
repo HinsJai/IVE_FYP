@@ -23,11 +23,13 @@ sys.path.extend([".."])
 
 from common.item_getter import FrameGetter
 from common.logger import get_logger
-from protos.proto_pb2 import (Class, Image, LogRequest, NotificationRequest,
-                              Response)
-from protos.proto_pb2_grpc import (AnalysisServicer, DiscordLogStub,
-                                   Violation_NotificationStub,
-                                   add_AnalysisServicer_to_server)
+from protos.proto_pb2 import Class, Image, LogRequest, NotificationRequest, Response
+from protos.proto_pb2_grpc import (
+    AnalysisServicer,
+    DiscordLogStub,
+    Violation_NotificationStub,
+    add_AnalysisServicer_to_server,
+)
 
 with open("config.toml", "rb") as config:
     config = tomllib.load(config)
@@ -82,9 +84,13 @@ class AnalysisServer:
         self.__db_queue: Queue[list[str]] = Queue()
         self.__dc_worker = threading.Thread(target=self.__dc_worker, daemon=True)
         self.__db_worker = threading.Thread(target=self.__db_worker, daemon=True)
+        self.__get_db_notificaiton_worker = threading.Thread(
+            target=self.__get_db_notificaiton_worker, daemon=True
+        )
         self.__notificaiton_worker = threading.Thread(
             target=self.__notificaiton_worker, daemon=True
         )
+        self.__notification_setting = []
 
     def __enter__(self) -> Self:
         add_AnalysisServicer_to_server(AnalysisService(self), self.__server)
@@ -105,6 +111,7 @@ class AnalysisServer:
         self.__frame_getter.start()
         self.__dc_worker.start()
         self.__db_worker.start()
+        self.__get_db_notificaiton_worker.start()
         self.__notificaiton_worker.start()
         with contextlib.suppress(KeyboardInterrupt):
             self.__server.wait_for_termination()
@@ -172,6 +179,15 @@ class AnalysisServer:
             self.__log_to_notification(camID, violation_types, workplace)
             self.__notification_queue.task_done()
 
+    def __get_db_notificaiton_worker(self) -> None:
+        while True:
+            self.__notification_setting = asyncio.run(
+                AnalysisServer.__get_db_response(
+                    "SELECT notificaitonProfileSetting FROM setting where email = 'jason199794@gmail.com';"
+                )
+            )[0]["notificaitonProfileSetting"]
+            time.sleep(10)
+
     # store the action of the worker in queue
     def __log(self) -> None:
         violation_types = [
@@ -179,16 +195,27 @@ class AnalysisServer:
             for violation, count in self.__violation_counter.items()
             if count >= 2
         ]
+        notificaitonTypeName = {2: "NO_HARDHAT", 3: "NO_MASK", 4: "NO_SAFETY_VEST"}
+        set1 = set(violation_types)
+        set2 = set(map(lambda i: notificaitonTypeName[i], self.__notification_setting))
+
+        intersection = set1.intersection(set2)
+
+        if len(intersection) == 0:
+            return
+        
+        violation_types = list(intersection)
+
         self.__db_queue.put(violation_types)
         dc_pair = (
-            f"Violation detected at workplace TY-IVE {violation_types}",
+            f"Violation detected on camera c001 at workplace TY-IVE {violation_types}",
             cv2.imencode(".png", self.frame)[1].tobytes(),
         )
         self.__dc_queue.put(dc_pair)
         self.__notification_queue.put(("c001", violation_types, "TY-IVE"))
         self.__reset_counter()
-    
-    def __colored_helmet(self, x1:int, y1:int, x2:int, y2:int) -> int:
+
+    def __colored_helmet(self, x1: int, y1: int, x2: int, y2: int) -> int:
         helmet_image = self.frame[y1:y2, x1:x2]
         # print(helmet_image)
         # if len(helmet_image) == 0:
@@ -241,7 +268,7 @@ class AnalysisServer:
                 #     prediction = self.__helmet_model.predict([histogram])
                 #     predicted_label = self.__label_encoder.inverse_transform(prediction)
                 #     class_type = 10 + predicted_label
-                    
+
                 boxes.append(
                     {
                         "x1": x1,
@@ -253,7 +280,11 @@ class AnalysisServer:
                         # "x2": int(box.xyxy[0][2]),
                         # "y2": int(box.xyxy[0][3]),
                         # "class_type": int(box.cls[0]),
-                        "class_type": self.__colored_helmet(x1, y1, x2, y2) if class_type == 0 else class_type,
+                        "class_type": (
+                            self.__colored_helmet(x1, y1, x2, y2)
+                            if class_type == 0
+                            else class_type
+                        ),
                     }
                 )
 
