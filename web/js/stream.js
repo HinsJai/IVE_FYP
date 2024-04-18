@@ -4,7 +4,7 @@ let person_count = [0, 0, 0, 0];
 let server_availabilties = [true, true, true, true];
 let helment_roles = {};
 let showing_items = [];
-const normal_timeout = 0;
+const normal_timeout = 10;
 const error_timeout = 250;
 
 let canvas_array = [];
@@ -42,7 +42,7 @@ function getTimeNow() {
 
   return `${formattedHours}:${formattedMinutes}`;
 }
-function get_notification(url) {
+function get_stream_notification(url) {
   const socket = new WebSocket(`ws://${url}`);
  
   socket.onmessage = function (message) {

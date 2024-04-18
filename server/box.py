@@ -70,10 +70,18 @@ class AnalysisServer:
         )
         self.__reset_counter()
         self.__logger_channel = grpc.insecure_channel(
-            f"{DISCORD_LOGGER_URL}:{DISCORD_LOGGER_PORT}"
+            f"{DISCORD_LOGGER_URL}:{DISCORD_LOGGER_PORT}",
+            options=[
+                ("grpc.max_send_message_length", 1024*1024*1024),
+                ("grpc.max_receive_message_length", 1024*1024*1024),
+            ],
         )
         self.__notification_channel = grpc.insecure_channel(
-            f"{GRPC_NOTIFICATION_URL}:{GRPC_NOTIFICATION_PORT}"
+            f"{GRPC_NOTIFICATION_URL}:{GRPC_NOTIFICATION_PORT}",
+             options=[
+                ("grpc.max_send_message_length", 1024*1024*1024),
+                ("grpc.max_receive_message_length", 1024*1024*1024),
+            ],
         )
         self.__notification_stub = Violation_NotificationStub(
             self.__notification_channel
@@ -170,6 +178,8 @@ class AnalysisServer:
     def __dc_worker(self) -> None:
         while True:
             message, image = self.__dc_queue.get()
+            # set the image size in grpc
+
             self.__log_to_discord(message, image)
             self.__dc_queue.task_done()
 
@@ -203,7 +213,7 @@ class AnalysisServer:
 
         if len(intersection) == 0:
             return
-        
+
         violation_types = list(intersection)
 
         self.__db_queue.put(violation_types)

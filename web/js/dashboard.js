@@ -43,21 +43,28 @@ async function get_warning_day_count() {
 let chart = null
 
 
-async function warning_record_filter(duration = "day") {
+async function warning_record_filter(duration = "month") {
   violationCount = new Array(3).fill(0);
+  $("#duration-text").text(`(${duration.toUpperCase()})`)
+
   try {
     const response = await fetch(`/warning_record_filter?duration=${duration}`)
     const data = await response.json();
-    for (let i = 0; i < data[0].result.length; i++) {
-      for (let j = 0; j < data[0].result[i].violation_type.length; j++) {
-        if (data[0].result[i].violation_type[j] == "NO_SAFETY_VEST") {
-          violationCount[0] += 1;
-        } else if (data[0].result[i].violation_type[j] == "NO_MASK") {
-          violationCount[1] += 1;
-        } else if (data[0].result[i].violation_type[j] == "NO_HARDHAT") {
-          violationCount[2] += 1;
+    if (data[0].result.length > 0) {
+
+      for (let i = 0; i < data[0].result.length; i++) {
+        for (let j = 0; j < data[0].result[i].violation_type.length; j++) {
+          if (data[0].result[i].violation_type[j] == "NO_SAFETY_VEST") {
+            violationCount[0] += 1;
+          } else if (data[0].result[i].violation_type[j] == "NO_MASK") {
+            violationCount[1] += 1;
+          } else if (data[0].result[i].violation_type[j] == "NO_HARDHAT") {
+            violationCount[2] += 1;
+          }
         }
       }
+    } else {
+      violationCount = new Array(3).fill(0);
     }
 
     if (chart == null) {
@@ -90,6 +97,7 @@ async function warning_record_filter(duration = "day") {
                 "rgb(54, 162, 235)",
                 "rgb(255, 205, 86)",
               ],
+
               hoverOffset: 4,
             },
           ],
@@ -167,25 +175,29 @@ async function get_warning_count_filter(condition_1 = "hour", condition_2 = "day
 
   let label = get_warning_count_label(condition_1);
   let key = ""
-  // let length = 0
-  let result = results[0].result
-  if ("month" in result[0]) {
-    key = "month"
-  }
-  else if ("day" in result[0]) {
-    key = "day"
-  }
-  else if ("hour" in result[0]) {
-    key = "hour"
-  }
-  // length = label.length
-  warningData = new Array(label.length).fill(0);
-  for (let i = 0; i < result.length; i++) {
-    let index = result[i][key] - 1
-    if (Number.isNaN(index)) {
-      console.log(result[i][key])
+
+  if (results[0].result.length > 0) {
+    let result = results[0].result
+    if ("month" in result[0]) {
+      key = "month"
     }
-    warningData[index] = result[i]['count']
+    else if ("day" in result[0]) {
+      key = "day"
+    }
+    else if ("hour" in result[0]) {
+      key = "hour"
+    }
+
+    warningData = new Array(label.length).fill(0);
+    for (let i = 0; i < result.length; i++) {
+      let index = result[i][key] - 1
+      if (Number.isNaN(index)) {
+        console.log(result[i][key])
+      }
+      warningData[index] = result[i]['count']
+    }
+  } else {
+    warningData = new Array(label.length).fill(0);
   }
 
   if (warningChart == null) {

@@ -41,6 +41,7 @@ class CamServer:
     __server: grpc.Server = field(init=False)
     __logger: Logger = field(init=False)
     __cap: cv2.VideoCapture = field(init=False)
+    frame_counter: int = field(init=False, default=0)
 
     def __post_init__(self) -> None:
         self.__cam_ip = CAM_URL
@@ -69,6 +70,11 @@ class CamServer:
     def __read_cam(self) -> NoReturn:
         while True:
             ret, frame = self.__cap.read()
+            self.frame_counter += 1
+            if self.frame_counter == self.__cap.get(cv2.CAP_PROP_FRAME_COUNT):
+                self.frame_counter = 0
+                self.__cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+
             if ret:
                 FRAME_QUEUE.put(frame)  # Use a queue to handle frames
 

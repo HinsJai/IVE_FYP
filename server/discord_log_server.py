@@ -63,7 +63,7 @@ class MyClient(discord.Client):
 
 @dataclass(slots=True, repr=False)
 class DiscordBotServer:
-    loop: AbstractEventLoop = field(init=False)
+    loop: AbstractEventLoop = field(init=False, default=None)
     __my_guild = discord.Object(id=GUILD_ID)
     __client: MyClient = field(init=False)
     __server: grpc.server = field(init=False)
@@ -75,7 +75,10 @@ class DiscordBotServer:
         self.__client = MyClient(intents=intents)
         self.__client.event(self.on_ready)
         self.__client.tree.command(guild=self.__my_guild)(self.say)
-        self.__server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+        self.__server = grpc.server(futures.ThreadPoolExecutor(max_workers=10), options = [
+            ('grpc.max_send_message_length', 1024 * 1024 * 1024),
+            ('grpc.max_receive_message_length', 1024 * 1024 * 1024)
+        ])
         self.__loger = get_logger("DiscordBotServer")
 
     def start(self) -> None:
@@ -123,10 +126,11 @@ class DiscordLogService(DiscordLogServicer):
 
     @override
     def log(self, request, _) -> Empty:
-        asyncio.run_coroutine_threadsafe(
-            self.__server.send_log(request.message, request.image.data),
-            self.__server.loop,
-        )
+        if self.__server.loop != None:
+            asyncio.run_coroutine_threadsafe(
+                self.__server.send_log(request.message, request.image.data),
+                self.__server.loop,
+            )
         return Empty()
 
 

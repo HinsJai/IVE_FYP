@@ -102,6 +102,7 @@ func get_image_data(wg *sync.WaitGroup, id int) {
 	defer wg.Done()
 	var err error
 	image_stream[id], err = frame_clients[id].GetImage(context.Background(), &pb.Empty{}, grpc.MaxCallRecvMsgSize(1024*1024*1024))
+
 	if err != nil {
 		log.Fatalf("could not call GetImage: %v", err)
 	}
@@ -289,18 +290,19 @@ func update_user_api(c *fiber.Ctx) error {
 
 	eContact, _ := strconv.ParseInt((userInfo["eContact"].(string)), 10, 64)
 
-	result, _ := db.Create("Update user set contact = $contact, eContact = $eContact, position = $positon where email = $email", map[string]interface{}{
-		"email":    userInfo["email"].(string),
-		"contact":  contact,
-		"eContact": eContact,
-		"position": userInfo["position"].(string),
+	result, _ := db.Query("Update user set contact = $contact, emergencyContact = $emergencyContact, position = $position, emergencyPersonRelation = $emergencyPersonRelation where email = $email", map[string]interface{}{
+		"email":                   userInfo["email"].(string),
+		"contact":                 contact,
+		"emergencyContact":        eContact,
+		"position":                userInfo["position"].(string),
+		"emergencyPersonRelation": userInfo["ePersonRelation"].(string),
 	})
 
-	if result == nil {
-		return c.SendStatus(fiber.StatusBadRequest)
+	if result != nil {
+		return c.SendStatus(fiber.StatusOK)
 	}
 
-	return c.SendStatus(fiber.StatusOK)
+	return c.SendStatus(fiber.StatusBadRequest)
 }
 
 func delete_user_api(c *fiber.Ctx) error {
@@ -319,7 +321,7 @@ func delete_user_api(c *fiber.Ctx) error {
 		return err
 	}
 	fmt.Print(userInfo)
-	
+
 	user_result, _ := db.Query("DELETE FROM user where email = $email", map[string]interface{}{
 		"email": userInfo["email"].(string),
 	})
@@ -399,6 +401,8 @@ func get_warning_count_filter_api(c *fiber.Ctx) error {
 	condition_1 := c.Query("condition_1") //hour or day or month
 	condition_2 := c.Query("condition_2") // year or month or day
 
+	// fmt.Printf("condition_1: %s, condition_2: %s", condition_1, condition_2)
+
 	if condition_1 != "hour" && condition_1 != "day" && condition_1 != "month" {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
@@ -411,6 +415,7 @@ func get_warning_count_filter_api(c *fiber.Ctx) error {
 	if err != nil {
 		return c.SendString(fmt.Sprintf("Error: %v", err))
 	}
+
 	return c.JSON(result)
 }
 

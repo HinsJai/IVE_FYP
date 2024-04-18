@@ -8,7 +8,7 @@ port = 8788
 
 [web]
 # url = "05wbdt0x-8007.asse.devtunnels.ms"
-# url = "https://jz356bnk-8007.asse.devtunnels.ms"
+# url = "jz356bnk-8007.asse.devtunnels.ms"
 url = "localhost:8007"
 index = "index"
 port = 8007
