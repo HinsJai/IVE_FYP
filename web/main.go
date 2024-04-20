@@ -391,6 +391,7 @@ func get_warning_count_filter_api(c *fiber.Ctx) error {
 
 	var err error
 	sess, err = store.Get(c)
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -398,20 +399,35 @@ func get_warning_count_filter_api(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusUnauthorized)
 	}
 
-	condition_1 := c.Query("condition_1") //hour or day or month
-	condition_2 := c.Query("condition_2") // year or month or day
+	duration := c.Query("duration") //hour or day or month
 
-	// fmt.Printf("condition_1: %s, condition_2: %s", condition_1, condition_2)
-
-	if condition_1 != "hour" && condition_1 != "day" && condition_1 != "month" {
+	if duration != "hour" && duration != "day" && duration != "month" {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
-	if condition_2 != "year" && condition_2 != "month" && condition_2 != "day" {
-		return c.SendStatus(fiber.StatusBadRequest)
+	hour := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}
+	month := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}
+	day := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
+
+	// result, err := db.Query(fmt.Sprintf("Select %s, count(select * from violation_record where time::%s(time) = $parent.%s and time::year(time) = time::year(time::now())) from (array::distinct((select time::%s(time) as %s from violation_record where time::%s(time) = time::%s(time::now()))));", condition_1, condition_1, condition_1, condition_1, condition_1, condition_2, condition_2), map[string]string{})
+
+	var result interface{}
+
+	switch {
+	case duration == "hour":
+		result, _ = db.Query("Select $this as hour, count(select * from violation_record where time::hour(time) = $parent and time::year(time) = time::year(time::now()+8h) and time::month(time) = time::month(time::now()+8h) and time::day(time) = time::day(time::now()+8h)) from $hour;", map[string]interface{}{
+			"hour": hour,
+		})
+	case duration == "day":
+		result, _ = db.Query("Select $this as day, count(select * from violation_record where time::day(time) = $parent and time::year(time) = time::year(time::now()+8h) and time::month(time) = time::month(time::now()+8h)) from $day;", map[string]interface{}{
+			"day": day,
+		})
+	case duration == "month":
+		result, _ = db.Query("Select $this as month, count(select * from violation_record where time::month(time) = $parent and time::year(time) = time::year(time::now()+8h)) from $month;", map[string]interface{}{
+			"month": month,
+		})
 	}
 
-	result, err := db.Query(fmt.Sprintf("Select %s, count(select * from violation_record where time::%s(time) = $parent.%s and time::year(time) = time::year(time::now())) from (array::distinct((select time::%s(time) as %s from violation_record where time::%s(time) = time::%s(time::now()))));", condition_1, condition_1, condition_1, condition_1, condition_1, condition_2, condition_2), map[string]string{})
 	if err != nil {
 		return c.SendString(fmt.Sprintf("Error: %v", err))
 	}
@@ -420,7 +436,9 @@ func get_warning_count_filter_api(c *fiber.Ctx) error {
 }
 
 func get_warning_day_count_api(c *fiber.Ctx) error {
-	result, err := db.Query("COUNT(SELECT * FROM violation_record WHERE time::day(time) = time::day(time::now()));", map[string]string{})
+	//result, err := db.Query("COUNT(SELECT * FROM violation_record WHERE time::day(time) = time::day(time::now()+8h));", map[string]string{})
+	result, err := db.Query("count(SELECT * FROM violation_record WHERE time::day(time) = time::day(time::now()+8h) and time::year(time) = time::year(time::now()+8h) and time::month(time) = time::month(time::now()+8h));", map[string]string{})
+
 	if err != nil {
 		return c.SendString(fmt.Sprintf("Error: %v", err))
 	}
@@ -430,6 +448,7 @@ func get_warning_day_count_api(c *fiber.Ctx) error {
 func warning_record_filter(c *fiber.Ctx) error {
 	var err error
 	sess, err = store.Get(c)
+	var result interface{}
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -442,8 +461,15 @@ func warning_record_filter(c *fiber.Ctx) error {
 	if durationString != "day" && durationString != "month" && durationString != "year" {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
+	if durationString == "day" {
+		result, _ = db.Query("SELECT * FROM violation_record WHERE time::day(time) = time::day(time::now()+8h) and time::month(time) = time::month(time::now()+8h) and time::year(time) = time::year(time::now()+8h)", map[string]string{})
+	} else if durationString == "month" {
+		result, _ = db.Query("SELECT * FROM violation_record WHERE time::month(time) = time::month(time::now()+8h) and time::year(time) = time::year(time::now()+8h)", map[string]string{})
+	} else if durationString == "year" {
+		result, _ = db.Query("SELECT * FROM violation_record WHERE time::year(time) = time::year(time::now()+8h)", map[string]string{})
+	}
 
-	result, _ := db.Query(fmt.Sprintf("SELECT * FROM violation_record WHERE time::%s(time) = %s;", durationString, fmt.Sprintf("time::%s(time::now())", durationString)), map[string]string{})
+	// result, _ := db.Query(fmt.Sprintf("SELECT * FROM violation_record WHERE time::%s(time) = %s;", durationString, fmt.Sprintf("time::%s(time::now())", durationString)), map[string]string{})
 
 	if err != nil {
 		return c.SendString(fmt.Sprintf("Error: %v", err))
@@ -472,7 +498,7 @@ func get_users_api(c *fiber.Ctx) error {
 		log.Fatal(err)
 	}
 	if sess.Get("email") == nil {
-		return c.SendStatus(fiber.StatusUnauthorized)
+		return c.SendStatus(fiber.StatusSeeOther)
 	}
 
 	result, err := db.Query("SELECT firstName, lastName, gender, email, contact, position, emergencyContact, emergencyPersonRelation FROM user;", map[string]string{})
@@ -554,6 +580,7 @@ func logout(c *fiber.Ctx) error {
 }
 
 func forgot_password(c *fiber.Ctx) error {
+
 	return c.SendFile("./views/forgot_password.html")
 }
 

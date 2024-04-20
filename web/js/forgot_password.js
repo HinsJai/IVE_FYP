@@ -20,3 +20,7 @@ function verify_email() {
     },
   });
 }
+
+function blackToLogin() {
+  window.location.replace("/");
+}

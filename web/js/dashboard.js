@@ -16,7 +16,7 @@ function get_month_days() {
   let date = new Date();
   let month = date.getMonth() + 1;
   let year = date.getFullYear();
-  console.log(month, year);
+  // console.log(month, year);
   return daysInMonth(month, year);
 }
 
@@ -43,7 +43,7 @@ async function get_warning_day_count() {
 let chart = null
 
 
-async function warning_record_filter(duration = "month") {
+async function warning_record_filter(duration = "day") {
   violationCount = new Array(3).fill(0);
   $("#duration-text").text(`(${duration.toUpperCase()})`)
 
@@ -148,10 +148,10 @@ async function warning_record_filter(duration = "month") {
   }
 }
 
-function get_warning_count_label(condition_1) {
-  switch (condition_1) {
+function get_warning_count_label(duration) {
+  switch (duration) {
     case "hour":
-      return ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24"];
+      return ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"];
     case "day":
       const days = get_month_days();
       return Array.from({ length: days }, (_, index) => index + 1);;
@@ -167,17 +167,18 @@ function get_warning_count_label(condition_1) {
 let warningChart = null
 
 
-async function get_warning_count_filter(condition_1 = "hour", condition_2 = "day") {
+async function get_warning_count_filter(duration = "hour") {
   // results = await get_warning_year_count()
   //warningData = new Array(12).fill(0);
-  response = await fetch(`/get_warning_count_filter_api?condition_1=${condition_1}&condition_2=${condition_2}`);
+  response = await fetch(`/get_warning_count_filter_api?duration=${duration}`);
   let results = await response.json();
 
-  let label = get_warning_count_label(condition_1);
+  let label = get_warning_count_label(duration);
   let key = ""
-
+  console.log(results[0].result)
   if (results[0].result.length > 0) {
     let result = results[0].result
+    // console.log(result)
     if ("month" in result[0]) {
       key = "month"
     }
@@ -189,12 +190,17 @@ async function get_warning_count_filter(condition_1 = "hour", condition_2 = "day
     }
 
     warningData = new Array(label.length).fill(0);
+    // console.log(warningData)
     for (let i = 0; i < result.length; i++) {
-      let index = result[i][key] - 1
+      let index = result[i][key]
       if (Number.isNaN(index)) {
         console.log(result[i][key])
       }
+      if (key == "day" || key == "month") {
+        index = index - 1
+      }
       warningData[index] = result[i]['count']
+
     }
   } else {
     warningData = new Array(label.length).fill(0);
@@ -222,7 +228,7 @@ async function get_warning_count_filter(condition_1 = "hour", condition_2 = "day
           x: {
             title: {
               display: true,
-              text: `num of ${condition_1}`,
+              text: `num of ${duration}`,
               color: 'white',
               font: {
                 size: 20
@@ -277,8 +283,20 @@ async function get_warning_count_filter(condition_1 = "hour", condition_2 = "day
         borderColor: "yellow",
       },
     ];
-    warningChart.options.scales.x.title.text = `num of ${condition_1}`;
+    warningChart.options.scales.x.title.text = `num of ${duration}`;
     warningChart.update();
-    $("#warning-duration").text(`(${condition_2.toUpperCase()})`)
+    $("#warning-duration").text(`(${duration.toUpperCase()})`)
   }
 }
+
+// setInterval(() => {
+//   warning_record_filter();
+// }, 15000);
+
+// setInterval(() => {
+//   get_warning_day_count();
+// }, 15000);
+
+// setInterval(() => {
+//   get_warning_count_filter();
+// }, 15000)

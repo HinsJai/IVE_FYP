@@ -22,7 +22,7 @@ let json_result //= get_user_profile_setting();
 //let notificaitonProfileSetting = Object.values(notificaitonTypeName)
 
 window.addEventListener("load", async function () {
- 
+
   let data = await get_user_profile_setting();
   showing_items = data[0]
   //notificaitonProfileSetting = data[1].map(item => notificaitonTypeName[item])
@@ -44,7 +44,7 @@ function getTimeNow() {
 }
 function get_stream_notification(url) {
   const socket = new WebSocket(`ws://${url}`);
- 
+
   socket.onmessage = function (message) {
     const data = JSON.parse(message.data);
     let { camID, workplace, classType } = data;
@@ -55,7 +55,7 @@ function get_stream_notification(url) {
 
     const intersection = new Set([...set1].filter(x => set2.has(x)));
 
-    if(intersection.size == 0) {
+    if (intersection.size == 0) {
       return;
     }
 
@@ -193,18 +193,21 @@ function update_image(stream_source) {
       //class_type = box[i].class_type;
       box_color = getBoxColor(class_type);
       ctx.beginPath();
+      ctx.fillStyle = "white";
+      ctx.fillRect(scaledX1, scaledY1 - 20, ctx.measureText(getClass(class_type)).width, 20);
       ctx.strokeStyle = box_color;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1;
       ctx.font = "lighter 12px Arial";
-      ctx.fillStyle = "red";
+      ctx.fillStyle = box_color;
       ctx.fillText(getClass(class_type), scaledX1, scaledY1 - 5);
       ctx.rect(scaledX1, scaledY1, scaledWidth, scaledHeight);
       ctx.stroke();
     }
 
 
-
     ctx.beginPath();
+    ctx.fillStyle = "black";
+    ctx.fillRect(5, 10, 185, 40);
     ctx.fillStyle = "green";
     ctx.font = "lighter 24px Arial";
     ctx.fillText(`Person Count: ${person_count[stream_source]}`, 10, 40);
@@ -235,6 +238,8 @@ function getBoxColor(class_type) {
     case 3:
     case 4:
       return "red";
+    case 5:
+      return "orange";
     default:
       return "blue";
   }

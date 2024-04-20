@@ -64,7 +64,7 @@ class AnalysisServer:
         self.__logger = get_logger("Model Server")
         self.__server = grpc.server(futures.ThreadPoolExecutor())
         self.__frame_getter = FrameGetter(CAM_URL, CAM_PORT)
-        self.__model = YOLO("../model/best_100.pt")
+        self.__model = YOLO("../model/best_ppe.pt")
         self.__helmet_model, self.__label_encoder = joblib.load(
             "../model/helmet_color_cls.pkl", mmap_mode="r"
         )

@@ -3,7 +3,7 @@
 **/__pycache__
 /venv
 **/video
-/db_data
+/db
 *.sh
 */*.sh
 .vscode

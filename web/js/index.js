@@ -9,3 +9,4 @@ errorMsg.addEventListener("click", function () {
   this.style.display = "none";
   window.location.replace("/");
 });
+
