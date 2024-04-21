@@ -1,5 +1,6 @@
 [cam]
 url = "localhost"
 port = 8879
-camera = "./video/hk_real.mp4"
-# camera = 0
+# camera = "./video/white_yellow_hardhat.mp4"
+camera = 0
+# camera = "./video/d1.mp4"

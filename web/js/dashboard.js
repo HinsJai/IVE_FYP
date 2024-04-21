@@ -289,14 +289,14 @@ async function get_warning_count_filter(duration = "hour") {
   }
 }
 
-// setInterval(() => {
-//   warning_record_filter();
-// }, 15000);
+setInterval(() => {
+  warning_record_filter();
+}, 15000);
 
-// setInterval(() => {
-//   get_warning_day_count();
-// }, 15000);
+setInterval(() => {
+  get_warning_day_count();
+}, 15000);
 
-// setInterval(() => {
-//   get_warning_count_filter();
-// }, 15000)
+setInterval(() => {
+  get_warning_count_filter();
+}, 15000)

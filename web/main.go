@@ -848,7 +848,7 @@ func main() {
 	otp_dict = make(map[string]int)
 	setup_db()
 	setup_client_pair(config.cam.url, config.server.url)
-	// setup_client_pair(config.cam.tim_url, config.server.tim_url)
+	setup_client_pair(config.cam.tim_url, config.server.tim_url)
 	defer frame_conn.Close()
 	defer box_conn.Close()
 
