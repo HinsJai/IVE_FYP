@@ -1,10 +1,10 @@
 # 🏗️ Smart Construction Site – AI-Powered Safety Monitoring System
 
-This is a final-year project developed by a group of Higher Diploma in Software Engineering students at the Hong Kong Institute of Vocational Education (Tsing Yi). The goal of this project is to **enhance construction site safety** using real-time **AI-based detection and alerting systems**.
+This is the Final Year Project for the Higher Diploma in Software Engineering at the Hong Kong Institute of Vocational Education (Tsing Yi). The project introduces an AI-powered real-time monitoring system for construction site safety.
 
 ## 📌 Project Overview
 
-The Smart Construction Site system leverages **computer vision and distributed computing** to monitor construction site conditions. It detects **safety violations**, such as missing helmets or vests, and also identifies **fires**, issuing **real-time alerts** via Discord to safety officers.
+The system is designed to detect and report safety violations using AI models and computer vision. It identifies whether workers wear the appropriate safety gear (e.g., helmets, masks, safety vests) and detects fire hazards using IP camera feeds and real-time processing.
 
 
 ## 🧠 Technologies Used
@@ -17,70 +17,36 @@ The Smart Construction Site system leverages **computer vision and distributed c
 | Data Streaming   | gRPC                   |
 | Communication    | Discord API            |
 | Database         | SurrealDB              |
-| Frontend         | HTML/CSS + JS (UI only)|
-| Architecture     | Distributed system     |
+| Frontend         | HTML/CSS + JS (jQuery) |
+| Architecture     | Distributed System     |
 
 ## 🛠️ Features
 
-- **Multiple Safety Inspections**  
-  Detects helmets, masks, safety vests, people, machinery, and vehicles.
-
-- **Fire Detection**  
-  Real-time flame detection using a second YOLOv8 model.
-
-- **Alerting System**  
-  - Alerts for continuous safety violations.
-  - Emergency broadcast in case of fire.
-  - Periodic non-compliance reminders.
-
-- **User Management**  
-  Create, update, delete users with different roles (e.g. site manager, safety officer).
-
-- **Data Analysis**  
-  Safety compliance percentages, historical trends, and report generation.
-
-- **Real-Time Monitoring**  
-  24/7 surveillance using IP cams with instant browser updates.
+- **Object Detection**: Helmets, safety masks, vests, people, machinery, vehicles, fire
+- **Helmet Color Role Classification**: Identify roles based on helmet colors
+- **Alert System**: Real-time safety alerts via Discord
+- **User Management**: Create, edit, delete user accounts
+- **Data Reporting**: Weekly/monthly violation summaries
+- **Log History**: Full violation log with timestamps
+- **Real-Time Monitoring**: Surveillance with web UI
+- **Backup & Security**: Daily data backup and Argon2-hashed passwords
 
 ## 🗂️ System Architecture
 
-This system is designed using a **three-tier distributed architecture**:
+Three-tier distributed system:
+- **Presentation Layer**: HTML & browser UI
+- **Application Layer**: Golang Fiber web server, PyTorch inference server
+- **Data Layer**: SurrealDB for storage, Discord API for alerts
 
-1. **Presentation Layer:**  
-   - Web UI using HTML, served by Golang Fiber
-   - Displays detection results in real time
+## ⚙️ How It Works
 
-2. **Application Logic Layer:**  
-   - Inference server using YOLOv8 (PyTorch) + gRPC
-   - Cam server captures images and sends via gRPC in Base64
-   - Golang web server handles client communication
+1. **Cam Server** captures real-time video feed and encodes images to Base64
+2. **Web Server** receives images via gRPC and waits for frontend requests
+3. **Inference Server** decodes and runs YOLOv8 object detection
+4. **Discord Alerts** are triggered on violation detection
+5. **SurrealDB** logs violations and timestamps
+6. **Frontend** polls server and renders real-time results
 
-3. **Data Layer:**  
-   - SurrealDB stores metadata and violation logs
-   - Discord API used for real-time alert distribution
-
-## 📊 Dataset
-
-- Object Detection: Roboflow dataset for construction safety (~2,800+ images)  
-- Fire Detection: Pre-trained flame detection dataset (YOLO-compatible)  
-- Helmet Color Classification (for role detection): Optional extension dataset
-
-## 📁 How to Run (Simplified Overview)
-
-1. **Cam Server** captures image → encodes in Base64 → sends via gRPC
-2. **Inference Server** receives and decodes → runs YOLO model → sends results
-3. **Web Server** listens via gRPC → updates frontend UI with detection results
-4. **SurrealDB** logs violation info
-5. **Discord API** pushes alerts
-
-> ⚠️ Full installation and deployment steps are available in the `/docs` folder.
-
-## 📸 UI Screenshots
-
-- Login Page  
-- Dashboard (Live Detection Feed)  
-- Surveillance View  
-- Log History View  
 
 
 
