@@ -47,6 +47,9 @@ Three-tier distributed system:
 5. **SurrealDB** logs violations and timestamps
 6. **Frontend** polls server and renders real-time results
 
+## System Flow Chart
+<img src="commom/system_flow_chart.png" alt="Flow Chart" width="600"/>
+
 
 
 
