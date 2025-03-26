@@ -48,7 +48,7 @@ Three-tier distributed system:
 6. **Frontend** polls server and renders real-time results
 
 ## System Flow Chart
-<img src="commom/system_flow_chart.png" alt="Flow Chart" width="600"/>
+<img src="common/system_flow_chart.png" alt="Flow Chart" width="600"/>
 
 
 
