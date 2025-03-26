@@ -36,8 +36,8 @@ namespace = "fyp"
 database = "violation_record"
 
 [mailgun]
-api_key = "81b4b2a77b22b9a72c9c49a9196e1841-19806d14-9ea45bbe"
-domain = "sandboxc7768c16bf104067b4e0bca7e0bed658.mailgun.org"
+api_key = ""
+domain = ""
 
 [notification]
 url = "localhost:8574"
