@@ -50,6 +50,16 @@ Three-tier distributed system:
 ## System Flow Chart
 <img src="common/system_flow_chart.png" alt="Flow Chart" width="600"/>
 
+## 🖼️ UI Showcase - Partial
+
+### Login
+<img src="common/login.jpeg" alt="Login" width="600"/>
+
+### Dashboard
+<img src="common/dashboard.png" alt="Dashboard" width="600"/>
+
+### Adjust setting
+<img src="common/adjsut setting.png" alt="Adjust Setting" width="600"/>
 
 
 
