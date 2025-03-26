@@ -66,7 +66,7 @@ DEFINE FIELD email ON TABLE hardhatRole TYPE string ASSERT string::is::email($va
 DEFINE FIELD role ON TABLE hardhatRole  type object default {10:'Technicaler',11:'Signaller',12:'Supervisor',13:'Worker'};
 
 insert into hardhatRole {
-    email:'jason199794@gmail.com'
+    email:''
 }
 
 
@@ -86,11 +86,11 @@ insert into hardhatRole {
     {'yellowHardhat': 'Worker'}
 
 
-    update setting set profileSetting = [1,5,6,7,8,9] where email = 'jason199794@gmail.com';
+    update setting set profileSetting = [1,5,6,7,8,9] where email = '';
 
         update hardhatRole set role = {
                         10: 'Test',
                         11: 'Signaller',
                         12: 'Supervisor',
                         13: 'Worker'
-        } where email = 'jason199794@gmail.com';
+        } where email = '';
